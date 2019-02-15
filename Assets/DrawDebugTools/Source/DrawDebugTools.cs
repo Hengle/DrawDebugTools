@@ -251,47 +251,53 @@ public class DrawDebugTools : MonoBehaviour
 
     public static void DrawDebug2DDonut(  float InnerRadius, float OuterRadius, int Segments, Color Color, bool PersistentLines = false, float LifeTime = -1.0f) { }
 
-    public static void DrawDebugCylinder(Vector3  Start, Vector3  End, Quaternion Rotation, float Radius, int Segments, Color  Color, bool PersistentLines = false, float LifeTime = -1.0f)
+    public static void DrawDebugCylinder(Vector3 Start, Vector3 End, Quaternion Rotation, float Radius, int Segments, Color Color, bool PersistentLines = false, float LifeTime = -1.0f)
     {
         Segments = Mathf.Max(Segments, 4);
 
         Vector3 CylinderUp = (End - Start).normalized;
-        Vector3 CylinderRight = Vector3.Cross(Vector3.up, CylinderUp);
+        Vector3 CylinderRight = Vector3.Cross(Vector3.up, CylinderUp).normalized;
+        Vector3 CylinderForward = Vector3.Cross(CylinderRight, CylinderUp).normalized;
+        float CylinderHeight = (End - Start).magnitude;
 
-        //Vector3 Up = Vector3.up;// (End - Start).normalized;
-        //float Height = (End - Start).magnitude;
-        //Vector3 Dir = End - Start;
-        //Quaternion Rot = Quaternion.LookRotation(Dir, Vector3.up);
-        //Rot = Quaternion.Euler(Rot.eulerAngles - new Vector3(90.0f, 0.0f, 0.0f));
-        //Rot = Quaternion.Inverse(Rot);
-        // Segments = Mathf.Max(Segments, 4);
-        //Segments = (int)Mathf.Round((float)Segments / 4.0f) * 4;
+        float AngleInc = 2.0f * Mathf.PI / (float)Segments;
 
-        //float AngleInc = 2.0f * Mathf.PI / (float)Segments;
-        //print("Rot = " + Rot.eulerAngles);
-        //float Angle = 0.0f;
-        //for (int i = 0; i < Segments; i++)
-        //{
-        //    Vector3 Point_1 = Start + Radius * new Vector3(Mathf.Cos(Angle), 0.0f, Mathf.Sin(Angle));
-        //    Vector3 Point_4 = End + Radius * new Vector3(Mathf.Cos(Angle), 0.0f, Mathf.Sin(Angle));
-        //    Vector3 Point_3 = Point_1 + Up * Height;
-        //    Angle += AngleInc;
-        //    Vector3 Point_2 = Start + Radius * new Vector3(Mathf.Cos(Angle), 0.0f, Mathf.Sin(Angle));
+        Vector3 Perpondicular = Vector3.zero;
+        Vector3 Dummy = Vector3.zero;
 
-        //    Vector3 Center = Start;// (Start + Start+Vector3.up * Vector3.Distance(Start, End)) / 2.0f;
-        //    DrawDebugBox(Start+new Vector3(60.0f, 0.0f, 0.0f), Rot, new Vector3(40.0f, 100.0f, 10.0f), Color.yellow, false);
-        //    DrawDebugBox(Start, Quaternion.identity, Vector3.one, Color.yellow, false);
-        //    DrawDebugBox(End, Quaternion.identity, Vector3.one, Color.cyan, false);
-        //    DrawDebugBox(Center, Quaternion.identity, Vector3.one*1.3f, Color.blue, false);
+        Vector3 Center = (Start + End) / 2.0f;
+        
+        // Debug End
+        float Angle = 0.0f;
+        Vector3 P_1;
+        Vector3 P_2;
+        Vector3 P_3;
+        Vector3 P_4;
 
-        //    InternalDrawDebugLine(Point_1, Point_2, Center, Rot, Color, PersistentLines, LifeTime);
-        //    InternalDrawDebugLine(Point_1, Point_3, Center, Rot, Color, PersistentLines, LifeTime);
+        Vector3 RotatedVect;
+        for (int i = 0; i < Segments; i++)
+        {
+            RotatedVect = Quaternion.AngleAxis(Mathf.Rad2Deg * Angle, CylinderUp) * CylinderRight * Radius;
 
-        //    InternalDrawDebugLine(Point_3, Point_2 + Up * Height, Center, Rot, Color, PersistentLines, LifeTime);
-        //}
+            P_1 = Start + RotatedVect;
+            P_2 = P_1 + CylinderUp * CylinderHeight;
+
+            // Draw lines
+            InternalDrawDebugLine(P_1, P_2, Start, Rotation, Color, PersistentLines, LifeTime);
+
+            Angle += AngleInc;
+            RotatedVect = Quaternion.AngleAxis(Mathf.Rad2Deg * Angle, CylinderUp) * CylinderRight * Radius;
+
+            P_3 = Start+ RotatedVect;
+            P_4 = P_3 + CylinderUp * CylinderHeight;
+
+            // Draw lines
+            InternalDrawDebugLine(P_1, P_3, Start, Rotation, Color, PersistentLines, LifeTime);
+            InternalDrawDebugLine(P_2, P_4, Start, Rotation, Color, PersistentLines, LifeTime);
+        }
     }
 
-    public static void DrawDebugCone( Vector3  Origin, Vector3  Direction, float Length, float AngleWidth, float AngleHeight, int NumSides, Color  Color, bool PersistentLines = false, float LifeTime = -1.0f) { }
+    public static void DrawDebugCone(Vector3 Origin, Vector3 Direction, float Length, float AngleWidth, float AngleHeight, int NumSides, Color Color, bool PersistentLines = false, float LifeTime = -1.0f) { }
 
     public static void DrawDebugAltCone( Vector3  Origin, Vector3  Rotation, float Length, float AngleWidth, float AngleHeight, Color  DrawColor, bool PersistentLines = false, float LifeTime = -1.0f, float Thickness = 0.0f) { }
 
