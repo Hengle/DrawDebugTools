@@ -297,7 +297,77 @@ public class DrawDebugTools : MonoBehaviour
         }
     }
 
-    public static void DrawDebugCone(Vector3 Origin, Vector3 Direction, float Length, float AngleWidth, float AngleHeight, int NumSides, Color Color, bool PersistentLines = false, float LifeTime = -1.0f) { }
+    public static void DrawDebugCone(Vector3 Position, Vector3 Direction, float Length, float AngleWidth, float AngleHeight, int Segments, Color Color, bool PersistentLines = false, float LifeTime = -1.0f)
+    {
+        Segments = Mathf.Max(Segments, 4);
+
+        float SmallNumber = 0.001f;
+        float Angle1 = Mathf.Clamp(AngleHeight * Mathf.Deg2Rad, SmallNumber, Mathf.PI - SmallNumber);
+        float Angle2 = Mathf.Clamp(AngleWidth * Mathf.Deg2Rad, SmallNumber, Mathf.PI - SmallNumber);
+
+        float SinX2 = Mathf.Sin(0.5f * Angle1);
+        float SinY2 = Mathf.Sin(0.5f * Angle2);
+
+        float SqrSinX2 = SinX2 * SinX2;
+        float SqrSinY2 = SinY2 * SinY2;
+
+        float TanX2 = Mathf.Tan(0.5f * Angle1);
+        float TanY2 = Mathf.Tan(0.5f * Angle2);
+
+        Vector3[] ConeVerts;
+        ConeVerts = new Vector3[Segments];
+
+        for (int i = 0; i < Segments; i++)
+        {
+            float AngleFragment = (float)i / (float)(Segments);
+            float ThiAngle = 2.0f * Mathf.PI * AngleFragment;
+            float PhiAngle = Mathf.Atan2(Mathf.Sin(ThiAngle) * SinY2, Mathf.Cos(ThiAngle) * SinX2);
+            float SinPhiAngle = Mathf.Sin(PhiAngle);
+            float CosPhiAngle = Mathf.Cos(PhiAngle);
+            float SqrSinPhi = SinPhiAngle * SinPhiAngle;
+            float SqrCosPhi = CosPhiAngle * CosPhiAngle;
+
+            float RSq = SqrSinX2 * SqrSinY2 / (SqrSinX2 * SqrSinPhi + SqrSinY2 * SqrCosPhi);
+            float R = Mathf.Sqrt(RSq);
+            float Sqr = Mathf.Sqrt(1 - RSq);
+            float Alpha = R * CosPhiAngle;
+            float Beta = R * SinPhiAngle;
+
+
+            ConeVerts[i].x = (1 - 2 * RSq);
+            ConeVerts[i].y = 2 * Sqr * Alpha;
+            ConeVerts[i].z = 2 * Sqr * Beta;
+        }
+
+        Vector3 ConeDirection = Direction.normalized;
+
+        Vector3 AngleFromDirection = Quaternion.LookRotation(ConeDirection, Vector3.up).eulerAngles - new Vector3(0.0f, 90.0f, 0.0f);
+        Quaternion Q = Quaternion.Euler(new Vector3(AngleFromDirection.z, AngleFromDirection.y, -AngleFromDirection.x));
+        Matrix4x4 M = Matrix4x4.TRS(Position, Q, Vector3.one * Length);
+
+        Vector3 CurrentPoint = Vector3.zero;
+        Vector3 PrevPoint = Vector3.zero;
+        Vector3 FirstPoint = Vector3.zero;
+
+        for (int i = 0; i < Segments; i++)
+        {
+            CurrentPoint = M.MultiplyPoint(ConeVerts[i]);
+            DrawDebugLine(Position, CurrentPoint, Color, PersistentLines, LifeTime);
+
+            if (i == 0)
+            {
+                FirstPoint = CurrentPoint;
+            }
+            else
+            {
+                DrawDebugLine(PrevPoint, CurrentPoint, Color, PersistentLines, LifeTime);
+            }
+            PrevPoint = CurrentPoint;
+        }
+
+        DrawDebugLine(CurrentPoint, FirstPoint, Color, PersistentLines, LifeTime);
+    }
+    public Vector3 Angle = Vector3.zero;
 
     public static void DrawDebugAltCone( Vector3  Origin, Vector3  Rotation, float Length, float AngleWidth, float AngleHeight, Color  DrawColor, bool PersistentLines = false, float LifeTime = -1.0f, float Thickness = 0.0f) { }
 

@@ -41,10 +41,19 @@ public class DrawDebugToolsExample : MonoBehaviour {
         DrawDebugTools.DrawDebugDirectionalArrow(ArrowStartPosition, ArrowEndPosition, 2.0f, Color.cyan, false);
 
         // Draw cylinder
-        //Vector3 CylinderStart = new Vector3(300.0f, 0.0f, 0.0f);
-        //Vector3 CylinderEnd = new Vector3(300.0f, 10.0f, 30.0f);
+        Vector3 CylinderStart = new Vector3(300.0f, 0.0f, 0.0f);
+        Vector3 CylinderEnd = new Vector3(300.0f, 10.0f, 30.0f);
         DrawDebugTools.DrawDebugCylinder(CylinderStart, CylinderEnd, Quaternion.Euler(Rot), 5.0f, 12, Color.red, false);
 
+        // Draw cone
+        Vector3 ConePosition = new Vector3(350.0f, 0.0f, 0.0f);
+        Vector3 ConeDirection = Vector3.forward;
+        float ConeLength = 10.0f;
+        float ConeAngleWidth = 30.0f;
+        float ConeAngleHeight = 60.0f;
+        int ConeSegments = 12;
+
+        DrawDebugTools.DrawDebugCone(ConePosition, ConeDirection, ConeLength, ConeAngleWidth, ConeAngleHeight, ConeSegments, Color.green, false);
 
         // Remove persistent lines
         if (Input.GetKeyDown(KeyCode.F))
@@ -52,6 +61,6 @@ public class DrawDebugToolsExample : MonoBehaviour {
             DrawDebugTools.FlushPersistentDebugLines();
         }
     }
-    public Vector3 CylinderStart = new Vector3(300.0f, 0.0f, 0.0f);
-    public Vector3 CylinderEnd = new Vector3(300.0f, 10.0f, 30.0f);
+ 
+    
 }
