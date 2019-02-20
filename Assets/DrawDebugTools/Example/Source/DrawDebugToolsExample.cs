@@ -55,12 +55,20 @@ public class DrawDebugToolsExample : MonoBehaviour {
 
         DrawDebugTools.DrawDebugCone(ConePosition, ConeDirection, ConeLength, ConeAngleWidth, ConeAngleHeight, ConeSegments, Color.green, false);
 
+        // Draw frustum
+        DrawDebugTools.DrawDebugFrustum(GameObject.FindObjectOfType<Camera>(), Color.yellow, false);
+
+        // Draw capsule
+        Vector3 CapsulePosition = new Vector3(400.0f, 0.0f, 0.0f);
+        Vector3 CapsuleRotation = new Vector3(0.0f, 0.0f, 0.0f);
+        float CapsuleHalfHeight = 10.0f;
+        float CapsuleRadius = 2.0f;
+        DrawDebugTools.DrawDebugCapsule(CapsulePosition, CapsuleHalfHeight, CapsuleRadius, Quaternion.Euler(CapsuleRotation), Color.gray, false);
+
         // Remove persistent lines
         if (Input.GetKeyDown(KeyCode.F))
         {
             DrawDebugTools.FlushPersistentDebugLines();
         }
     }
- 
-    
 }

@@ -367,17 +367,92 @@ public class DrawDebugTools : MonoBehaviour
 
         DrawDebugLine(CurrentPoint, FirstPoint, Color, PersistentLines, LifeTime);
     }
-    public Vector3 Angle = Vector3.zero;
-
-    public static void DrawDebugAltCone( Vector3  Origin, Vector3  Rotation, float Length, float AngleWidth, float AngleHeight, Color  DrawColor, bool PersistentLines = false, float LifeTime = -1.0f, float Thickness = 0.0f) { }
 
     public static void DrawDebugString( Vector3  TextLocation, string Text, Color  TextColor, float Duration = -1.000000f, bool  DrawShadow = false) { }
 
-    public static void DrawDebugFrustum(Color Color, bool PersistentLines = false, float LifeTime = -1.0f) { }
+    public static void DrawDebugFrustum(Camera Camera, Color Color, bool PersistentLines = false, float LifeTime = -1.0f)
+    {
+        Plane[] FrustumPlanes = GeometryUtility.CalculateFrustumPlanes(Camera);
+        Vector3[] NearPlaneCorners = new Vector3[4]; 
+        Vector3[] FarePlaneCorners = new Vector3[4]; 
+        
+        Plane TempPlane = FrustumPlanes[1]; FrustumPlanes[1] = FrustumPlanes[2]; FrustumPlanes[2] = TempPlane;
 
-    public static void DrawCircle(Vector3 Base, Vector3 X, Vector3 Y, Color Color, float Radius, int NumSides, bool PersistentLines = false, float LifeTime = -1.0f, float Thickness = 0) { }
+        for (int i = 0; i < 4; i++)
+        {
+            NearPlaneCorners[i] = GetIntersectionPointOfPlanes(FrustumPlanes[4], FrustumPlanes[i], FrustumPlanes[(i + 1) % 4]); 
+            FarePlaneCorners[i] = GetIntersectionPointOfPlanes(FrustumPlanes[5], FrustumPlanes[i], FrustumPlanes[(i + 1) % 4]);
+        }
+        
+        for (int i = 0; i < 4; i++)
+        {
+            InternalDrawDebugLine(NearPlaneCorners[i], NearPlaneCorners[(i + 1) % 4], Vector3.zero, Quaternion.identity, Color, PersistentLines, LifeTime);
+            InternalDrawDebugLine(FarePlaneCorners[i], FarePlaneCorners[(i + 1) % 4], Vector3.zero, Quaternion.identity, Color, PersistentLines, LifeTime);
+            InternalDrawDebugLine(NearPlaneCorners[i], FarePlaneCorners[i], Vector3.zero, Quaternion.identity, Color, PersistentLines, LifeTime);
+        }
+    }
+    private static Vector3 GetIntersectionPointOfPlanes(Plane Plane_1, Plane Plane_2, Plane Plane_3)
+    { 
+        return ((-Plane_1.distance * Vector3.Cross(Plane_2.normal, Plane_3.normal)) +
+                (-Plane_2.distance * Vector3.Cross(Plane_3.normal, Plane_1.normal)) +
+                (-Plane_3.distance * Vector3.Cross(Plane_1.normal, Plane_2.normal))) /
+            (Vector3.Dot(Plane_1.normal, Vector3.Cross(Plane_2.normal, Plane_3.normal)));
+    }
 
-    public static void DrawDebugCapsule(Vector3 Center, float HalfHeight, float Radius, Vector3 Rotation, Color Color, bool PersistentLines = false, float LifeTime = -1.0f) { }
+    public static void DrawCircle(Vector3 Base, Vector3 X, Vector3 Z, Color Color, float Radius, int Segments, bool PersistentLines = false, float LifeTime = -1.0f)
+    {
+        float AngleDelta = 2.0f * Mathf.PI / Segments;
+        Vector3 LastPoint = Base + X * Radius;
+
+        for (int i = 0; i < Segments; i++)
+        {
+            Vector3 Point = Base + (X * Mathf.Cos(AngleDelta * (i + 1)) + Z * Mathf.Sin(AngleDelta * (i + 1))) * Radius;
+            InternalDrawDebugLine(LastPoint, Point, Base, Quaternion.identity, Color, PersistentLines, LifeTime);
+            LastPoint = Point;
+        }
+    }
+
+    public static void DrawHalfCircle(Vector3 Base, Vector3 X, Vector3 Z, Color Color, float Radius, int Segments, bool PersistentLines = false, float LifeTime = -1.0f)
+    {
+        float AngleDelta = 2.0f * Mathf.PI / Segments;
+        Vector3 LastPoint = Base + X * Radius;
+
+        for (int i = 0; i < (Segments/2); i++)
+        {
+            Vector3 Point = Base + (X * Mathf.Cos(AngleDelta * (i + 1)) + Z * Mathf.Sin(AngleDelta * (i + 1))) * Radius;
+            InternalDrawDebugLine(LastPoint, Point, Base, Quaternion.identity, Color, PersistentLines, LifeTime);
+            LastPoint = Point;
+        }
+    }
+
+    public static void DrawDebugCapsule(Vector3 Center, float HalfHeight, float Radius, Quaternion Rotation, Color Color, bool PersistentLines = false, float LifeTime = -1.0f)
+    {
+        int Segments = 16;
+
+        Matrix4x4 M = Matrix4x4.TRS(Vector3.zero, Rotation, Vector3.one);
+
+        Vector3 AxisX = M.MultiplyVector(Vector3.right);
+        Vector3 AxisY = M.MultiplyVector(Vector3.up);
+        Vector3 AxisZ = M.MultiplyVector(Vector3.forward);
+
+        float HalfMaxed = Mathf.Max(HalfHeight - Radius, 0.1f);
+        Vector3 TopPoint = Center + HalfMaxed * AxisY;
+        Vector3 BottomPoint = Center - HalfMaxed * AxisY;
+
+        DrawCircle(TopPoint, AxisX, AxisZ, Color, Radius, Segments, false, LifeTime);
+        DrawCircle(BottomPoint, AxisX, AxisZ, Color, Radius, Segments, false, LifeTime);
+
+        DrawHalfCircle(TopPoint, AxisX, AxisY, Color, Radius, Segments, PersistentLines, LifeTime);
+        DrawHalfCircle(TopPoint, AxisZ, AxisY, Color, Radius, Segments, PersistentLines, LifeTime);
+
+        DrawHalfCircle(BottomPoint, AxisX, -AxisY, Color, Radius, Segments, PersistentLines, LifeTime);
+        DrawHalfCircle(BottomPoint, AxisZ, -AxisY, Color, Radius, Segments, PersistentLines, LifeTime);
+
+        InternalDrawDebugLine(TopPoint + Radius * AxisX, BottomPoint + Radius * AxisX, Vector3.zero, Quaternion.identity, Color, PersistentLines, LifeTime);
+        InternalDrawDebugLine(TopPoint - Radius * AxisX, BottomPoint - Radius * AxisX, Vector3.zero, Quaternion.identity, Color, PersistentLines, LifeTime);
+        InternalDrawDebugLine(TopPoint + Radius * AxisZ, BottomPoint + Radius * AxisZ, Vector3.zero, Quaternion.identity, Color, PersistentLines, LifeTime);
+        InternalDrawDebugLine(TopPoint - Radius * AxisZ, BottomPoint - Radius * AxisZ, Vector3.zero, Quaternion.identity, Color, PersistentLines, LifeTime);
+    }
 
     public static void DrawDebugCamera(Vector3 Location, Vector3 Rotation, float FOVDeg, Color Color, float Scale = 1.0f, bool PersistentLines = false, float LifeTime = -1.0f) { }
 
