@@ -43,7 +43,7 @@ public class DrawDebugTools : MonoBehaviour
     public static DrawDebugTools Instance;
     
     private List<BatchedLine> BatchedLines;
-    private Material LineMaterial;
+    private Material LineMaterial, AlphaMaterial;
 
     //*********************************//
     // Functions                       //
@@ -63,6 +63,7 @@ public class DrawDebugTools : MonoBehaviour
     private void OnRenderObject()
     {
         DrawListOfLines();
+        DrawListOfQuads();
     }
         
     private void CreateLineMaterial()
@@ -79,6 +80,16 @@ public class DrawDebugTools : MonoBehaviour
             //lineMaterial.SetInt("_Cull", (int)UnityEngine.Rendering.CullMode.Off);
             // Turn off depth writes
             //lineMaterial.SetInt("_ZWrite", 0);
+
+            AlphaMaterial = new Material(shader);
+            AlphaMaterial.hideFlags = HideFlags.HideAndDontSave;
+            // Turn on alpha blending
+            AlphaMaterial.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            AlphaMaterial.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            // Turn backface culling off
+            AlphaMaterial.SetInt("_Cull", (int)UnityEngine.Rendering.CullMode.Off);
+            // Turn off depth writes
+            AlphaMaterial.SetInt("_ZWrite", 0);
         }
     }
 
@@ -525,6 +536,28 @@ public class DrawDebugTools : MonoBehaviour
                 }
             }
         }
+    }
+    private void DrawListOfQuads()
+    {
+        // Draw lines
+        GL.PushMatrix();
+
+        AlphaMaterial.SetPass(0);
+
+        GL.Begin(GL.QUADS);
+        Matrix4x4 M = transform.localToWorldMatrix;
+
+        GL.LoadPixelMatrix();
+
+        GL.Color(new Color(1.0f, 0.0f, 0.0f, 0.7f));
+        GL.Vertex(new Vector3(0.0f, 0.0f, 0.0f));
+        GL.Vertex(new Vector3(Screen.width, 0.0f, 0.0f));
+        GL.Vertex(new Vector3(Screen.width, 20.0f, 0.0f));
+        GL.Vertex(new Vector3(0.0f, 20.0f, 0.0f));
+
+        GL.End();
+
+        GL.PopMatrix();
     }
 
     public static void FlushPersistentDebugLines()
