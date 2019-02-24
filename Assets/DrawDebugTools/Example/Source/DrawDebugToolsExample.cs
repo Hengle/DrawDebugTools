@@ -71,13 +71,13 @@ public class DrawDebugToolsExample : MonoBehaviour {
         DrawDebugTools.DrawDebugCapsule(CapsulePosition, CapsuleHalfHeight, CapsuleRadius, Quaternion.Euler(CapsuleRotation), Color.gray, false);
 
         // Draw text
-        DrawDebugTools.DrawDebugString(Vector3.zero, "Hello world", Color.green);
-
-
+        DrawDebugTools.DrawDebugString(TextPos, "Mourad, Hello | World 1234567890() ; # $ @ !:: Delta time = "+Time.deltaTime, Color.green, 0.0f);
+        
         // Remove persistent lines
         if (Input.GetKeyDown(KeyCode.F))
         {
             DrawDebugTools.FlushPersistentDebugLines();
         }
     }
+    public Vector3 TextPos=new Vector3(10.0f, 100.0f, 0.0f);
 }
