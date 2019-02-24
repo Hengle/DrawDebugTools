@@ -18,6 +18,7 @@ public class DrawDebugToolsExample : MonoBehaviour {
         float SinValue = Mathf.Sin(Time.timeSinceLevelLoad) * 40.0f;
         Vector3 Pos = new Vector3(0.0f, 0.0f, SinValue);
         DrawDebugTools.DrawDebugSphere(Pos, Quaternion.Euler(Rot), 20.0f, 8, Color.gray);
+        DrawDebugTools.DrawDebugString(Camera.main.WorldToScreenPoint(Pos), Pos.ToString(), TextAnchor.MiddleCenter, Color.green, 0.0f);
 
         // Draw line
         Vector3 LineStart = new Vector3(30.0f, 0.0f, 0.0f);
@@ -71,7 +72,7 @@ public class DrawDebugToolsExample : MonoBehaviour {
         DrawDebugTools.DrawDebugCapsule(CapsulePosition, CapsuleHalfHeight, CapsuleRadius, Quaternion.Euler(CapsuleRotation), Color.gray, false);
 
         // Draw text
-        DrawDebugTools.DrawDebugString(TextPos, "Mourad, Hello | World 1234567890() ; # $ @ !:: Delta time = "+Time.deltaTime, Color.green, 0.0f);
+        DrawDebugTools.DrawDebugString(TextPos, "Mourad, Hello | World 1234567890() ; # $ @ !:: Delta time = "+Time.deltaTime, TextAnchor.MiddleLeft, Color.green, 0.0f);
         
         // Remove persistent lines
         if (Input.GetKeyDown(KeyCode.F))

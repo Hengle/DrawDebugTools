@@ -43,14 +43,19 @@ public class DrawDebugTools : MonoBehaviour
     //*********************************//
     // Variables                       //
     //*********************************//
-    public static DrawDebugTools Instance;
+    public static DrawDebugTools        Instance;
+
     // Lines
-    private List<BatchedLine> BatchedLines;
+    private List<BatchedLine>           m_BatchedLines;
+
     // Materials
-    public Material LineMaterial, AlphaMaterial;
+    private Material                    m_LineMaterial;
+    private Material                    m_AlphaMaterial;
+
     // Text
-    public static List<DebugText> DebugTextesList;
-    private static List<XElement> XmlLettersList;
+    private static List<DebugText>      m_DebugTextesList;
+    private static List<XElement>       m_XmlLettersList;
+    private static float                m_FontSizeModifier = 0.5f;
 
     //*********************************//
     // Functions                       //
@@ -58,14 +63,14 @@ public class DrawDebugTools : MonoBehaviour
     private void Awake()
     {
         Instance = this;
-        BatchedLines = new List<BatchedLine>();
+        m_BatchedLines = new List<BatchedLine>();
         
         // Initialize font xml
         XDocument doc = XDocument.Parse(TextDatas.DebugTextFontXml, LoadOptions.PreserveWhitespace);
-        XmlLettersList = doc.Element("BitmapFont").Elements("Letter").ToList<XElement>();
+        m_XmlLettersList = doc.Element("BitmapFont").Elements("Letter").ToList<XElement>();
 
         // Init debug text list
-        DebugTextesList = new List<DebugText>();
+        m_DebugTextesList = new List<DebugText>();
     }
 
     private void Start()
@@ -76,29 +81,28 @@ public class DrawDebugTools : MonoBehaviour
     private void OnRenderObject()
     {
         DrawListOfLines();
-        //DrawListOfQuads();
         DrawListOfTextes();
     }
         
     private void InitializeMaterials()
     {
-        if (!LineMaterial)
+        if (!m_LineMaterial)
         {
             Shader shader = Shader.Find("Hidden/Internal-Colored");
-            LineMaterial = new Material(shader);
+            m_LineMaterial = new Material(shader);
 
             Shader shader3 = Shader.Find("Unlit/Transparent");
-            AlphaMaterial = new Material(shader3);
-            AlphaMaterial.SetTexture("_MainTex", TextDatas.GetFontTexture());
+            m_AlphaMaterial = new Material(shader3);
+            m_AlphaMaterial.SetTexture("_MainTex", TextDatas.GetFontTexture());
 
-            AlphaMaterial.hideFlags = HideFlags.HideAndDontSave;
+            m_AlphaMaterial.hideFlags = HideFlags.HideAndDontSave;
             // Turn on alpha blending
-            AlphaMaterial.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-            AlphaMaterial.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            m_AlphaMaterial.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            m_AlphaMaterial.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
             // Turn backface culling off
-            AlphaMaterial.SetInt("_Cull", (int)UnityEngine.Rendering.CullMode.Off);
+            m_AlphaMaterial.SetInt("_Cull", (int)UnityEngine.Rendering.CullMode.Off);
             // Turn off depth writes
-            AlphaMaterial.SetInt("_ZWrite", 0);
+            m_AlphaMaterial.SetInt("_ZWrite", 0);
         }
     }
 
@@ -151,17 +155,17 @@ public class DrawDebugTools : MonoBehaviour
             }
         }
 
-        DrawDebugTools.Instance.BatchedLines.AddRange(Lines);
+        DrawDebugTools.Instance.m_BatchedLines.AddRange(Lines);
     }
 
     public static void DrawDebugLine(Vector3 LineStart, Vector3 LineEnd, Color Color, bool PersistentLines = false, float LifeTime = -1.0f)
     {
-        DrawDebugTools.Instance.BatchedLines.Add(new BatchedLine(LineStart, LineEnd, Vector3.zero, Quaternion.identity, Color, PersistentLines, LifeTime));
+        DrawDebugTools.Instance.m_BatchedLines.Add(new BatchedLine(LineStart, LineEnd, Vector3.zero, Quaternion.identity, Color, PersistentLines, LifeTime));
     }
 
     private static void InternalDrawDebugLine(Vector3 LineStart, Vector3 LineEnd, Vector3 Center, Quaternion Rotation, Color Color, bool PersistentLines = false, float LifeTime = -1.0f)
     {
-        DrawDebugTools.Instance.BatchedLines.Add(new BatchedLine(LineStart, LineEnd, Center, Rotation, Color, PersistentLines, LifeTime));
+        DrawDebugTools.Instance.m_BatchedLines.Add(new BatchedLine(LineStart, LineEnd, Center, Rotation, Color, PersistentLines, LifeTime));
     }
 
     public static void DrawDebugPoint(Vector3 Position, float Size, Color Color, bool PersistentLines = false, float LifeTime = -1.0f)
@@ -388,9 +392,9 @@ public class DrawDebugTools : MonoBehaviour
         DrawDebugLine(CurrentPoint, FirstPoint, Color, PersistentLines, LifeTime);
     }
 
-    public static void DrawDebugString( Vector3  TextLocation, string Text, Color  TextColor, float LifeTime = 0.0f)
+    public static void DrawDebugString(Vector3  TextLocation, string Text, TextAnchor Anchor, Color  TextColor, float LifeTime = 0.0f)
     {
-        AddDebugText(Text, TextAnchor.LowerLeft, TextLocation, LifeTime);
+        AddDebugText(Text, Anchor, TextLocation, LifeTime);
     }
 
     public static void DrawDebugFrustum(Camera Camera, Color Color, bool PersistentLines = false, float LifeTime = -1.0f)
@@ -490,11 +494,11 @@ public class DrawDebugTools : MonoBehaviour
 
     private void DrawListOfLines()
     {
-        if (BatchedLines.Count == 0)
+        if (m_BatchedLines.Count == 0)
             return;
 
         // Check material is set
-        if (!LineMaterial)
+        if (!m_LineMaterial)
         {
             InitializeMaterials();
         }
@@ -502,25 +506,25 @@ public class DrawDebugTools : MonoBehaviour
         // Draw lines
         GL.PushMatrix();
 
-        LineMaterial.SetPass(0);
+        m_LineMaterial.SetPass(0);
 
         GL.Begin(GL.LINES);
         Matrix4x4 M = transform.localToWorldMatrix;
 
-        for (int i = 0; i < BatchedLines.Count; i++)
+        for (int i = 0; i < m_BatchedLines.Count; i++)
         {
-            M.SetTRS(Vector3.zero, BatchedLines[i].Rotation, Vector3.one);
+            M.SetTRS(Vector3.zero, m_BatchedLines[i].Rotation, Vector3.one);
                         
-            Vector3 S = BatchedLines[i].Start - BatchedLines[i].PivotPoint;
-            Vector3 E = BatchedLines[i].End - BatchedLines[i].PivotPoint;
+            Vector3 S = m_BatchedLines[i].Start - m_BatchedLines[i].PivotPoint;
+            Vector3 E = m_BatchedLines[i].End - m_BatchedLines[i].PivotPoint;
 
             Vector3 ST = M.MultiplyPoint(S);
             Vector3 ET = M.MultiplyPoint(E);
 
-            ST += BatchedLines[i].PivotPoint;
-            ET += BatchedLines[i].PivotPoint;
+            ST += m_BatchedLines[i].PivotPoint;
+            ET += m_BatchedLines[i].PivotPoint;
 
-            GL.Color(BatchedLines[i].Color);
+            GL.Color(m_BatchedLines[i].Color);
             GL.Vertex(ST);
             GL.Vertex(ET);
         }
@@ -530,21 +534,21 @@ public class DrawDebugTools : MonoBehaviour
         GL.PopMatrix();
 
         // Update lines
-        for (int i = BatchedLines.Count - 1; i >= 0; i--)
+        for (int i = m_BatchedLines.Count - 1; i >= 0; i--)
         {
-            if (!BatchedLines[i].PersistentLine)
+            if (!m_BatchedLines[i].PersistentLine)
             {
-                if (BatchedLines[i].RemainLifeTime > 0.0f)
+                if (m_BatchedLines[i].RemainLifeTime > 0.0f)
                 {
-                    BatchedLines[i].RemainLifeTime -= Time.deltaTime;
-                    if (BatchedLines[i].RemainLifeTime <= 0.0f)
+                    m_BatchedLines[i].RemainLifeTime -= Time.deltaTime;
+                    if (m_BatchedLines[i].RemainLifeTime <= 0.0f)
                     {
-                        BatchedLines.RemoveAt(i);
+                        m_BatchedLines.RemoveAt(i);
                     }
                 }
                 else
                 {
-                    BatchedLines.RemoveAt(i);
+                    m_BatchedLines.RemoveAt(i);
                 }
             }
         }
@@ -593,7 +597,7 @@ public class DrawDebugTools : MonoBehaviour
     {
         GL.PushMatrix();
 
-        AlphaMaterial.SetPass(0);
+        m_AlphaMaterial.SetPass(0);
 
         GL.Begin(GL.QUADS);
 
@@ -601,19 +605,20 @@ public class DrawDebugTools : MonoBehaviour
 
         GL.Color(new Color(1.0f, 0.0f, 0.0f, 0.7f));
 
-        float LastCharWidth = 0.0f;
+        
         Vector3 OriginPosition = Vector3.zero;
-        for (int i = 0; i < DebugTextesList.Count; i++)
+        for (int i = 0; i < m_DebugTextesList.Count; i++)
         {
             float image_w = 512.0f;
             float image_h = 512.0f;
+            float LastCharWidth = 0.0f;
 
-            OriginPosition = DebugTextesList[i].GetTextOriginPosition();
+            OriginPosition = m_DebugTextesList[i].GetTextOriginPosition();
 
-            for (int j = 0; j < DebugTextesList[i].m_TextCharsList.Count; j++)
+            for (int j = 0; j < m_DebugTextesList[i].m_TextCharsList.Count; j++)
             {
                 //print("ghghgh i | j = " + i + " | " + j);
-                DebugChar CurrenDebugChar = DebugTextesList[i].m_TextCharsList[j];
+                DebugChar CurrenDebugChar = m_DebugTextesList[i].m_TextCharsList[j];
 
                 float uv_x = CurrenDebugChar.X / image_w;
                 float uv_y = (image_h - (CurrenDebugChar.Y + CurrenDebugChar.H)) / image_h;
@@ -623,11 +628,11 @@ public class DrawDebugTools : MonoBehaviour
                 // Set vertices position
                 //float SizeModifier = 0.5f;
                 Vector3 VertexPos_1 = new Vector3(OriginPosition.x + LastCharWidth, OriginPosition.y, 0.0f);
-                Vector3 VertexPos_2 = new Vector3(OriginPosition.x + LastCharWidth, OriginPosition.y + CurrenDebugChar.H * SizeModifier, 0.0f);
-                Vector3 VertexPos_3 = new Vector3(OriginPosition.x + LastCharWidth + CurrenDebugChar.W * SizeModifier, OriginPosition.y + CurrenDebugChar.H * SizeModifier, 0.0f);
-                Vector3 VertexPos_4 = new Vector3(OriginPosition.x + LastCharWidth + CurrenDebugChar.W * SizeModifier, OriginPosition.y, 0.0f);
+                Vector3 VertexPos_2 = new Vector3(OriginPosition.x + LastCharWidth, OriginPosition.y + CurrenDebugChar.H * m_FontSizeModifier, 0.0f);
+                Vector3 VertexPos_3 = new Vector3(OriginPosition.x + LastCharWidth + CurrenDebugChar.W * m_FontSizeModifier, OriginPosition.y + CurrenDebugChar.H * m_FontSizeModifier, 0.0f);
+                Vector3 VertexPos_4 = new Vector3(OriginPosition.x + LastCharWidth + CurrenDebugChar.W * m_FontSizeModifier, OriginPosition.y, 0.0f);
 
-                LastCharWidth += CurrenDebugChar.W * SizeModifier;
+                LastCharWidth += CurrenDebugChar.W * m_FontSizeModifier;
 
                 GL.TexCoord2(uv_x, uv_y);
                 GL.Vertex(VertexPos_1);
@@ -648,34 +653,14 @@ public class DrawDebugTools : MonoBehaviour
         GL.PopMatrix();
 
         // Update text life time
-        for (int i = DebugTextesList.Count - 1; i >= 0; i--)
+        for (int i = m_DebugTextesList.Count - 1; i >= 0; i--)
         {
-            DebugTextesList[i].m_RemainLifeTime -= Time.deltaTime;
-            if (DebugTextesList[i].m_RemainLifeTime <= 0.0f)
+            m_DebugTextesList[i].m_RemainLifeTime -= Time.deltaTime;
+            if (m_DebugTextesList[i].m_RemainLifeTime <= 0.0f)
             {
-                DebugTextesList.RemoveAt(i);
+                m_DebugTextesList.RemoveAt(i);
             }
         }
-    }
-    public float SizeModifier = 0.5f;
-
-
-    // Get letter infos from xml
-    private static DebugChar GetLetterInfosFromXml(string Letter)
-    {
-        DebugChar LetterInfos = new DebugChar();
-        for (int i = 0; i < XmlLettersList.Count; i++)
-        {
-            if (XmlLettersList[i].Attribute("Char").Value == Letter)
-            {
-                LetterInfos.Char = XmlLettersList[i].Attribute("Char").Value;
-                LetterInfos.X = float.Parse(XmlLettersList[i].Attribute("X").Value);
-                LetterInfos.Y = float.Parse(XmlLettersList[i].Attribute("Y").Value);
-                LetterInfos.W = float.Parse(XmlLettersList[i].Attribute("Width").Value);
-                LetterInfos.H = float.Parse(XmlLettersList[i].Attribute("Height").Value);
-            }
-        }
-        return LetterInfos;
     }
 
     // Add new debug text to be drawn
@@ -688,17 +673,36 @@ public class DrawDebugTools : MonoBehaviour
             DebugChar DC = GetLetterInfosFromXml(LettersChars[i].ToString());
             DebugCharList.Add(DC);
         }
-        DebugTextesList.Add(new DebugText(DebugCharList, Anchor, Position, LifeTime));
+        m_DebugTextesList.Add(new DebugText(DebugCharList, Anchor, Position, m_FontSizeModifier, LifeTime));
     }
+
+    // Get letter infos from xml
+    private static DebugChar GetLetterInfosFromXml(string Letter)
+    {
+        DebugChar LetterInfos = new DebugChar();
+        for (int i = 0; i < m_XmlLettersList.Count; i++)
+        {
+            if (m_XmlLettersList[i].Attribute("Char").Value == Letter)
+            {
+                LetterInfos.Char = m_XmlLettersList[i].Attribute("Char").Value;
+                LetterInfos.X = float.Parse(m_XmlLettersList[i].Attribute("X").Value);
+                LetterInfos.Y = float.Parse(m_XmlLettersList[i].Attribute("Y").Value);
+                LetterInfos.W = float.Parse(m_XmlLettersList[i].Attribute("Width").Value);
+                LetterInfos.H = float.Parse(m_XmlLettersList[i].Attribute("Height").Value);
+            }
+        }
+        return LetterInfos;
+    }
+
 
     public static void FlushPersistentDebugLines()
     {
         // Delete all persistent lines
-        for (int i = DrawDebugTools.Instance.BatchedLines.Count - 1; i >= 0; i--)
+        for (int i = DrawDebugTools.Instance.m_BatchedLines.Count - 1; i >= 0; i--)
         {
-            if (DrawDebugTools.Instance.BatchedLines[i].PersistentLine)
+            if (DrawDebugTools.Instance.m_BatchedLines[i].PersistentLine)
             {
-                DrawDebugTools.Instance.BatchedLines.RemoveAt(i);
+                DrawDebugTools.Instance.m_BatchedLines.RemoveAt(i);
             }
         }
     }
@@ -743,19 +747,21 @@ public class DebugText
     public TextAnchor               m_TextAnchor;
     public Vector3                  m_TextPosition;
     public float                    m_RemainLifeTime;
+    public float                    m_FontSize;
 
     public DebugText()
     {
         m_TextCharsList = new List<DebugChar>();
     }
 
-    public DebugText(List<DebugChar> TextCharsList, TextAnchor TextAnchor, Vector3 TextPosition, float LifeTime)
+    public DebugText(List<DebugChar> TextCharsList, TextAnchor TextAnchor, Vector3 TextPosition, float FontSize, float LifeTime)
     {
         // Initialize text letters list
         m_TextCharsList     = new List<DebugChar>();
         m_TextCharsList     = TextCharsList;
         m_TextAnchor        = TextAnchor;
         m_TextPosition      = TextPosition;
+        m_FontSize          = FontSize;
         m_RemainLifeTime    = LifeTime;
     }
 
@@ -778,8 +784,8 @@ public class DebugText
     {
         Vector3 OriginPos = m_TextPosition;
 
-        float TextWidth = GetTextWidth();
-        float TextHeight = GetTextHeight();
+        float TextWidth = GetTextWidth() * m_FontSize;
+        float TextHeight = GetTextHeight() * m_FontSize;
 
         switch (m_TextAnchor)
         {
