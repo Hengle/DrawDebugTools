@@ -4,7 +4,8 @@ using UnityEngine;
 
 public class DrawDebugToolsExample : MonoBehaviour {
 	private void Start () {
-
+        //DrawDebugTools.DrawDebugString3D(TextPos, "Hello world", anchof, Color.green, 0.0f);
+        
     }
 
     public Vector3 Rot = Vector3.zero;
@@ -13,8 +14,8 @@ public class DrawDebugToolsExample : MonoBehaviour {
         float SinValue = Mathf.Sin(Time.timeSinceLevelLoad) * 40.0f;
         Vector3 Pos = new Vector3(0.0f, 0.0f, SinValue);
         DrawDebugTools.DrawDebugSphere(Pos, Quaternion.Euler(Rot), 20.0f, 8, Color.gray);
-        DrawDebugTools.DrawDebugString(Camera.main.WorldToScreenPoint(Pos), Pos.ToString(), TextAnchor.MiddleCenter, Color.green, 0.0f);
-
+        //DrawDebugTools.DrawDebugString2D(Camera.main.WorldToScreenPoint(Pos), Pos.ToString(), TextAnchor.MiddleCenter, Color.cyan, 0.0f);
+        
         // Draw line
         Vector3 LineStart = new Vector3(30.0f, 0.0f, 0.0f);
         Vector3 LineEnd = new Vector3(30.0f, 0.0f, 100.0f);
@@ -67,7 +68,8 @@ public class DrawDebugToolsExample : MonoBehaviour {
         DrawDebugTools.DrawDebugCapsule(CapsulePosition, CapsuleHalfHeight, CapsuleRadius, Quaternion.Euler(CapsuleRotation), Color.gray, false);
 
         // Draw text
-        DrawDebugTools.DrawDebugString(TextPos, "LogPlayLevel: PIE: Created PIE world by copying editor world", TextAnchor.MiddleLeft, Color.green, 0.0f);
+        //DrawDebugTools.DrawDebugString2D(TextPos, "2D LogPlayLevel: PIE: Created PIE world by copying editor world", anchof, Color.green, 0.0f);
+        DrawDebugTools.DrawDebugString3D(new Vector3(0.0f, 30.0f, 0.0f), "LogPlayLevel: PIE: Created PIE world by copying editor world | "+Time.deltaTime, anchof, Color.green, 0.0f);
         
         // Remove persistent lines
         if (Input.GetKeyDown(KeyCode.F))
@@ -76,4 +78,5 @@ public class DrawDebugToolsExample : MonoBehaviour {
         }
     }
     public Vector3 TextPos=new Vector3(10.0f, 100.0f, 0.0f);
+    public TextAnchor anchof;
 }
