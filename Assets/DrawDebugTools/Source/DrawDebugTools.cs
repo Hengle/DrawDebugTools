@@ -102,7 +102,7 @@ public class DrawDebugTools : MonoBehaviour
         }
     }
 
-    public static void DrawDebugSphere(Vector3 Center, Quaternion Rotation, float Radius, int Segments, Color Color, bool PersistentLines = false, float LifeTime = -1.0f)
+    public static void DrawSphere(Vector3 Center, Quaternion Rotation, float Radius, int Segments, Color Color, bool PersistentLines = false, float LifeTime = -1.0f)
     {
         Segments = Mathf.Max(Segments, 4);
         Segments = (int)Mathf.Round((float)Segments / 4.0f) * 4;
@@ -154,56 +154,56 @@ public class DrawDebugTools : MonoBehaviour
         DrawDebugTools.Instance.m_BatchedLines.AddRange(Lines);
     }
 
-    public static void DrawDebugLine(Vector3 LineStart, Vector3 LineEnd, Color Color, bool PersistentLines = false, float LifeTime = -1.0f)
+    public static void DrawLine(Vector3 LineStart, Vector3 LineEnd, Color Color, bool PersistentLines = false, float LifeTime = -1.0f)
     {
         DrawDebugTools.Instance.m_BatchedLines.Add(new BatchedLine(LineStart, LineEnd, Vector3.zero, Quaternion.identity, Color, PersistentLines, LifeTime));
     }
 
-    private static void InternalDrawDebugLine(Vector3 LineStart, Vector3 LineEnd, Vector3 Center, Quaternion Rotation, Color Color, bool PersistentLines = false, float LifeTime = -1.0f)
+    private static void InternalDrawLine(Vector3 LineStart, Vector3 LineEnd, Vector3 Center, Quaternion Rotation, Color Color, bool PersistentLines = false, float LifeTime = -1.0f)
     {
         DrawDebugTools.Instance.m_BatchedLines.Add(new BatchedLine(LineStart, LineEnd, Center, Rotation, Color, PersistentLines, LifeTime));
     }
 
-    public static void DrawDebugPoint(Vector3 Position, float Size, Color Color, bool PersistentLines = false, float LifeTime = -1.0f)
+    public static void DrawPoint(Vector3 Position, float Size, Color Color, bool PersistentLines = false, float LifeTime = -1.0f)
     {
         // X
-        InternalDrawDebugLine(Position + new Vector3(-Size / 2.0f, 0.0f, 0.0f), Position + new Vector3(Size / 2.0f, 0.0f, 0.0f), Position, Quaternion.identity, Color, PersistentLines, LifeTime);
+        InternalDrawLine(Position + new Vector3(-Size / 2.0f, 0.0f, 0.0f), Position + new Vector3(Size / 2.0f, 0.0f, 0.0f), Position, Quaternion.identity, Color, PersistentLines, LifeTime);
         // Y
-        InternalDrawDebugLine(Position + new Vector3( 0.0f, -Size / 2.0f,0.0f), Position + new Vector3( 0.0f, Size / 2.0f, 0.0f), Position, Quaternion.identity, Color, PersistentLines, LifeTime);
+        InternalDrawLine(Position + new Vector3( 0.0f, -Size / 2.0f,0.0f), Position + new Vector3( 0.0f, Size / 2.0f, 0.0f), Position, Quaternion.identity, Color, PersistentLines, LifeTime);
         // Z
-        InternalDrawDebugLine(Position + new Vector3(0.0f,  0.0f, -Size / 2.0f), Position + new Vector3(0.0f, 0.0f, Size / 2.0f), Position, Quaternion.identity, Color, PersistentLines, LifeTime);
+        InternalDrawLine(Position + new Vector3(0.0f,  0.0f, -Size / 2.0f), Position + new Vector3(0.0f, 0.0f, Size / 2.0f), Position, Quaternion.identity, Color, PersistentLines, LifeTime);
     }
 
-    public static void DrawDebugDirectionalArrow(Vector3 LineStart, Vector3 LineEnd, float ArrowSize, Color Color, bool PersistentLines = false, float LifeTime = -1.0f)
+    public static void DrawDirectionalArrow(Vector3 LineStart, Vector3 LineEnd, float ArrowSize, Color Color, bool PersistentLines = false, float LifeTime = -1.0f)
     {
-        InternalDrawDebugLine(LineStart, LineEnd, LineStart, Quaternion.identity, Color, PersistentLines, LifeTime);
+        InternalDrawLine(LineStart, LineEnd, LineStart, Quaternion.identity, Color, PersistentLines, LifeTime);
 
         Vector3 Dir = (LineEnd - LineStart).normalized;
         Vector3 Right = Vector3.Cross(Vector3.up, Dir);
 
-        InternalDrawDebugLine(LineEnd, LineEnd + (Right - Dir.normalized) * ArrowSize, LineStart, Quaternion.identity, Color, PersistentLines, LifeTime);
-        InternalDrawDebugLine(LineEnd, LineEnd + (-Right - Dir.normalized) * ArrowSize, LineStart, Quaternion.identity, Color, PersistentLines, LifeTime);
+        InternalDrawLine(LineEnd, LineEnd + (Right - Dir.normalized) * ArrowSize, LineStart, Quaternion.identity, Color, PersistentLines, LifeTime);
+        InternalDrawLine(LineEnd, LineEnd + (-Right - Dir.normalized) * ArrowSize, LineStart, Quaternion.identity, Color, PersistentLines, LifeTime);
     }
 
-    public static void DrawDebugBox(Vector3 Center, Quaternion Rotation, Vector3 Extent, Color Color, bool PersistentLines = false, float LifeTime = -1.0f)
+    public static void DrawBox(Vector3 Center, Quaternion Rotation, Vector3 Extent, Color Color, bool PersistentLines = false, float LifeTime = -1.0f)
     {
-        InternalDrawDebugLine(Center + new Vector3(Extent.x, Extent.y, Extent.z), Center + new Vector3(Extent.x, -Extent.y, Extent.z), Center, Rotation, Color, PersistentLines, LifeTime);
-        InternalDrawDebugLine(Center + new Vector3(Extent.x, -Extent.y, Extent.z), Center + new Vector3(-Extent.x, -Extent.y, Extent.z), Center, Rotation, Color, PersistentLines, LifeTime);
-        InternalDrawDebugLine(Center + new Vector3(-Extent.x, -Extent.y, Extent.z), Center + new Vector3(-Extent.x, Extent.y, Extent.z), Center, Rotation, Color, PersistentLines, LifeTime);
-        InternalDrawDebugLine(Center + new Vector3(-Extent.x, Extent.y, Extent.z), Center + new Vector3(Extent.x, Extent.y, Extent.z), Center, Rotation, Color, PersistentLines, LifeTime);
+        InternalDrawLine(Center + new Vector3(Extent.x, Extent.y, Extent.z), Center + new Vector3(Extent.x, -Extent.y, Extent.z), Center, Rotation, Color, PersistentLines, LifeTime);
+        InternalDrawLine(Center + new Vector3(Extent.x, -Extent.y, Extent.z), Center + new Vector3(-Extent.x, -Extent.y, Extent.z), Center, Rotation, Color, PersistentLines, LifeTime);
+        InternalDrawLine(Center + new Vector3(-Extent.x, -Extent.y, Extent.z), Center + new Vector3(-Extent.x, Extent.y, Extent.z), Center, Rotation, Color, PersistentLines, LifeTime);
+        InternalDrawLine(Center + new Vector3(-Extent.x, Extent.y, Extent.z), Center + new Vector3(Extent.x, Extent.y, Extent.z), Center, Rotation, Color, PersistentLines, LifeTime);
 
-        InternalDrawDebugLine(Center + new Vector3(Extent.x, Extent.y, -Extent.z), Center + new Vector3(Extent.x, -Extent.y, -Extent.z), Center, Rotation, Color, PersistentLines, LifeTime);
-        InternalDrawDebugLine(Center + new Vector3(Extent.x, -Extent.y, -Extent.z), Center + new Vector3(-Extent.x, -Extent.y, -Extent.z), Center, Rotation, Color, PersistentLines, LifeTime);
-        InternalDrawDebugLine(Center + new Vector3(-Extent.x, -Extent.y, -Extent.z), Center + new Vector3(-Extent.x, Extent.y, -Extent.z), Center, Rotation, Color, PersistentLines, LifeTime);
-        InternalDrawDebugLine(Center + new Vector3(-Extent.x, Extent.y, -Extent.z), Center + new Vector3(Extent.x, Extent.y, -Extent.z), Center, Rotation, Color, PersistentLines, LifeTime);
+        InternalDrawLine(Center + new Vector3(Extent.x, Extent.y, -Extent.z), Center + new Vector3(Extent.x, -Extent.y, -Extent.z), Center, Rotation, Color, PersistentLines, LifeTime);
+        InternalDrawLine(Center + new Vector3(Extent.x, -Extent.y, -Extent.z), Center + new Vector3(-Extent.x, -Extent.y, -Extent.z), Center, Rotation, Color, PersistentLines, LifeTime);
+        InternalDrawLine(Center + new Vector3(-Extent.x, -Extent.y, -Extent.z), Center + new Vector3(-Extent.x, Extent.y, -Extent.z), Center, Rotation, Color, PersistentLines, LifeTime);
+        InternalDrawLine(Center + new Vector3(-Extent.x, Extent.y, -Extent.z), Center + new Vector3(Extent.x, Extent.y, -Extent.z), Center, Rotation, Color, PersistentLines, LifeTime);
 
-        InternalDrawDebugLine(Center + new Vector3(Extent.x, Extent.y, Extent.z), Center + new Vector3(Extent.x, Extent.y, -Extent.z), Center, Rotation, Color, PersistentLines, LifeTime);
-        InternalDrawDebugLine(Center + new Vector3(Extent.x, -Extent.y, Extent.z), Center + new Vector3(Extent.x, -Extent.y, -Extent.z), Center, Rotation, Color, PersistentLines, LifeTime);
-        InternalDrawDebugLine(Center + new Vector3(-Extent.x, -Extent.y, Extent.z), Center + new Vector3(-Extent.x, -Extent.y, -Extent.z), Center, Rotation, Color, PersistentLines, LifeTime);
-        InternalDrawDebugLine(Center + new Vector3(-Extent.x, Extent.y, Extent.z), Center + new Vector3(-Extent.x, Extent.y, -Extent.z), Center, Rotation, Color, PersistentLines, LifeTime);
+        InternalDrawLine(Center + new Vector3(Extent.x, Extent.y, Extent.z), Center + new Vector3(Extent.x, Extent.y, -Extent.z), Center, Rotation, Color, PersistentLines, LifeTime);
+        InternalDrawLine(Center + new Vector3(Extent.x, -Extent.y, Extent.z), Center + new Vector3(Extent.x, -Extent.y, -Extent.z), Center, Rotation, Color, PersistentLines, LifeTime);
+        InternalDrawLine(Center + new Vector3(-Extent.x, -Extent.y, Extent.z), Center + new Vector3(-Extent.x, -Extent.y, -Extent.z), Center, Rotation, Color, PersistentLines, LifeTime);
+        InternalDrawLine(Center + new Vector3(-Extent.x, Extent.y, Extent.z), Center + new Vector3(-Extent.x, Extent.y, -Extent.z), Center, Rotation, Color, PersistentLines, LifeTime);
     }
 
-    public static void DrawDebugCircle(Vector3 Center, Quaternion Rotation, float Radius, int Segments, Color Color, bool PersistentLines = false, float LifeTime = -1.0f)
+    public static void DrawCircle(Vector3 Center, Quaternion Rotation, float Radius, int Segments, Color Color, bool PersistentLines = false, float LifeTime = -1.0f)
     {
         Segments = Mathf.Max(Segments, 4);
         Segments = (int)Mathf.Round((float)Segments / 4.0f) * 4;
@@ -216,11 +216,11 @@ public class DrawDebugTools : MonoBehaviour
             Vector3 Point_1 = Center + Radius * new Vector3(Mathf.Cos(Angle), 0.0f, Mathf.Sin(Angle));
             Angle += AngleInc;
             Vector3 Point_2 = Center + Radius * new Vector3(Mathf.Cos(Angle), 0.0f, Mathf.Sin(Angle));
-            InternalDrawDebugLine(Point_1, Point_2, Center, Rotation, Color, PersistentLines, LifeTime);
+            InternalDrawLine(Point_1, Point_2, Center, Rotation, Color, PersistentLines, LifeTime);
         }
     }
 
-    public static void DrawDebugCircle(Vector3 Center, float Radius, int Segments, Color Color, EDrawPlaneAxis DrawPlaneAxis = EDrawPlaneAxis.XZ, bool PersistentLines = false, float LifeTime = -1.0f)
+    public static void DrawCircle(Vector3 Center, float Radius, int Segments, Color Color, EDrawPlaneAxis DrawPlaneAxis = EDrawPlaneAxis.XZ, bool PersistentLines = false, float LifeTime = -1.0f)
     {
         Segments = Mathf.Max(Segments, 4);
         Segments = (int)Mathf.Round((float)Segments / 4.0f) * 4;
@@ -236,7 +236,7 @@ public class DrawDebugTools : MonoBehaviour
                     Vector3 Point_1 = Center + Radius * new Vector3(Mathf.Cos(Angle), 0.0f, Mathf.Sin(Angle));
                     Angle += AngleInc;
                     Vector3 Point_2 = Center + Radius * new Vector3(Mathf.Cos(Angle), 0.0f, Mathf.Sin(Angle));
-                    InternalDrawDebugLine(Point_1, Point_2, Center, Quaternion.identity, Color, PersistentLines, LifeTime);
+                    InternalDrawLine(Point_1, Point_2, Center, Quaternion.identity, Color, PersistentLines, LifeTime);
                 }
                 break;
             case EDrawPlaneAxis.XY:
@@ -245,7 +245,7 @@ public class DrawDebugTools : MonoBehaviour
                     Vector3 Point_1 = Center + Radius * new Vector3(0.0f, Mathf.Sin(Angle), Mathf.Cos(Angle));
                     Angle += AngleInc;
                     Vector3 Point_2 = Center + Radius * new Vector3(0.0f, Mathf.Sin(Angle), Mathf.Cos(Angle));
-                    InternalDrawDebugLine(Point_1, Point_2, Center, Quaternion.identity, Color, PersistentLines, LifeTime);
+                    InternalDrawLine(Point_1, Point_2, Center, Quaternion.identity, Color, PersistentLines, LifeTime);
                 }
                 break;
             case EDrawPlaneAxis.YZ:
@@ -254,7 +254,7 @@ public class DrawDebugTools : MonoBehaviour
                     Vector3 Point_1 = Center + Radius * new Vector3(Mathf.Cos(Angle), Mathf.Sin(Angle));
                     Angle += AngleInc;
                     Vector3 Point_2 = Center + Radius * new Vector3(Mathf.Cos(Angle), Mathf.Sin(Angle));
-                    InternalDrawDebugLine(Point_1, Point_2, Center, Quaternion.identity, Color, PersistentLines, LifeTime);
+                    InternalDrawLine(Point_1, Point_2, Center, Quaternion.identity, Color, PersistentLines, LifeTime);
                 }
                 break;
             default:
@@ -262,16 +262,16 @@ public class DrawDebugTools : MonoBehaviour
         }
     }
 
-    public static void DrawDebugCoordinateSystem(Vector3 Position, Quaternion Rotation, float Scale, bool PersistentLines = false, float LifeTime = -1.0f)
+    public static void DrawCoordinateSystem(Vector3 Position, Quaternion Rotation, float Scale, bool PersistentLines = false, float LifeTime = -1.0f)
     {
-        InternalDrawDebugLine(Position, Position + new Vector3(Scale, 0.0f, 0.0f), Position, Rotation, Color.red, PersistentLines, LifeTime);
-        InternalDrawDebugLine(Position, Position + new Vector3(0.0f, Scale, 0.0f), Position, Rotation, Color.green, PersistentLines, LifeTime);
-        InternalDrawDebugLine(Position, Position + new Vector3(0.0f, 0.0f, Scale), Position, Rotation, Color.blue, PersistentLines, LifeTime);
+        InternalDrawLine(Position, Position + new Vector3(Scale, 0.0f, 0.0f), Position, Rotation, Color.red, PersistentLines, LifeTime);
+        InternalDrawLine(Position, Position + new Vector3(0.0f, Scale, 0.0f), Position, Rotation, Color.green, PersistentLines, LifeTime);
+        InternalDrawLine(Position, Position + new Vector3(0.0f, 0.0f, Scale), Position, Rotation, Color.blue, PersistentLines, LifeTime);
     }
 
-    public static void DrawDebug2DDonut(  float InnerRadius, float OuterRadius, int Segments, Color Color, bool PersistentLines = false, float LifeTime = -1.0f) { }
+    public static void Draw2DDonut(  float InnerRadius, float OuterRadius, int Segments, Color Color, bool PersistentLines = false, float LifeTime = -1.0f) { }
 
-    public static void DrawDebugCylinder(Vector3 Start, Vector3 End, Quaternion Rotation, float Radius, int Segments, Color Color, bool PersistentLines = false, float LifeTime = -1.0f)
+    public static void DrawCylinder(Vector3 Start, Vector3 End, Quaternion Rotation, float Radius, int Segments, Color Color, bool PersistentLines = false, float LifeTime = -1.0f)
     {
         Segments = Mathf.Max(Segments, 4);
 
@@ -303,7 +303,7 @@ public class DrawDebugTools : MonoBehaviour
             P_2 = P_1 + CylinderUp * CylinderHeight;
 
             // Draw lines
-            InternalDrawDebugLine(P_1, P_2, Start, Rotation, Color, PersistentLines, LifeTime);
+            InternalDrawLine(P_1, P_2, Start, Rotation, Color, PersistentLines, LifeTime);
 
             Angle += AngleInc;
             RotatedVect = Quaternion.AngleAxis(Mathf.Rad2Deg * Angle, CylinderUp) * CylinderRight * Radius;
@@ -312,12 +312,12 @@ public class DrawDebugTools : MonoBehaviour
             P_4 = P_3 + CylinderUp * CylinderHeight;
 
             // Draw lines
-            InternalDrawDebugLine(P_1, P_3, Start, Rotation, Color, PersistentLines, LifeTime);
-            InternalDrawDebugLine(P_2, P_4, Start, Rotation, Color, PersistentLines, LifeTime);
+            InternalDrawLine(P_1, P_3, Start, Rotation, Color, PersistentLines, LifeTime);
+            InternalDrawLine(P_2, P_4, Start, Rotation, Color, PersistentLines, LifeTime);
         }
     }
 
-    public static void DrawDebugCone(Vector3 Position, Vector3 Direction, float Length, float AngleWidth, float AngleHeight, int Segments, Color Color, bool PersistentLines = false, float LifeTime = -1.0f)
+    public static void DrawCone(Vector3 Position, Vector3 Direction, float Length, float AngleWidth, float AngleHeight, int Segments, Color Color, bool PersistentLines = false, float LifeTime = -1.0f)
     {
         Segments = Mathf.Max(Segments, 4);
 
@@ -372,7 +372,7 @@ public class DrawDebugTools : MonoBehaviour
         for (int i = 0; i < Segments; i++)
         {
             CurrentPoint = M.MultiplyPoint(ConeVerts[i]);
-            DrawDebugLine(Position, CurrentPoint, Color, PersistentLines, LifeTime);
+            DrawLine(Position, CurrentPoint, Color, PersistentLines, LifeTime);
 
             if (i == 0)
             {
@@ -380,26 +380,26 @@ public class DrawDebugTools : MonoBehaviour
             }
             else
             {
-                DrawDebugLine(PrevPoint, CurrentPoint, Color, PersistentLines, LifeTime);
+                DrawLine(PrevPoint, CurrentPoint, Color, PersistentLines, LifeTime);
             }
             PrevPoint = CurrentPoint;
         }
 
-        DrawDebugLine(CurrentPoint, FirstPoint, Color, PersistentLines, LifeTime);
+        DrawLine(CurrentPoint, FirstPoint, Color, PersistentLines, LifeTime);
     }
 
-    public static void DrawDebugString2D(Vector2  TextLocation, string Text, TextAnchor Anchor, Color  TextColor, float LifeTime = 0.0f)
+    public static void DrawString2D(Vector2  TextLocation, string Text, TextAnchor Anchor, Color  TextColor, float LifeTime = 0.0f)
     {
         AddDebugText(Text, Anchor, TextLocation, TextColor, LifeTime, true);
     }
 
-    public static void DrawDebugString3D(Vector3 TextLocation, string Text, TextAnchor Anchor, Color TextColor, float LifeTime = 0.0f)
+    public static void DrawString3D(Vector3 TextLocation, string Text, TextAnchor Anchor, Color TextColor, float LifeTime = 0.0f)
     {
         
         AddDebugText(Text, Anchor, TextLocation, TextColor, LifeTime, false);
     }
 
-    public static void DrawDebugFrustum(Camera Camera, Color Color, bool PersistentLines = false, float LifeTime = -1.0f)
+    public static void DrawFrustum(Camera Camera, Color Color, bool PersistentLines = false, float LifeTime = -1.0f)
     {
         Plane[] FrustumPlanes = GeometryUtility.CalculateFrustumPlanes(Camera);
         Vector3[] NearPlaneCorners = new Vector3[4]; 
@@ -415,9 +415,9 @@ public class DrawDebugTools : MonoBehaviour
         
         for (int i = 0; i < 4; i++)
         {
-            InternalDrawDebugLine(NearPlaneCorners[i], NearPlaneCorners[(i + 1) % 4], Vector3.zero, Quaternion.identity, Color, PersistentLines, LifeTime);
-            InternalDrawDebugLine(FarePlaneCorners[i], FarePlaneCorners[(i + 1) % 4], Vector3.zero, Quaternion.identity, Color, PersistentLines, LifeTime);
-            InternalDrawDebugLine(NearPlaneCorners[i], FarePlaneCorners[i], Vector3.zero, Quaternion.identity, Color, PersistentLines, LifeTime);
+            InternalDrawLine(NearPlaneCorners[i], NearPlaneCorners[(i + 1) % 4], Vector3.zero, Quaternion.identity, Color, PersistentLines, LifeTime);
+            InternalDrawLine(FarePlaneCorners[i], FarePlaneCorners[(i + 1) % 4], Vector3.zero, Quaternion.identity, Color, PersistentLines, LifeTime);
+            InternalDrawLine(NearPlaneCorners[i], FarePlaneCorners[i], Vector3.zero, Quaternion.identity, Color, PersistentLines, LifeTime);
         }
     }
     private static Vector3 GetIntersectionPointOfPlanes(Plane Plane_1, Plane Plane_2, Plane Plane_3)
@@ -436,7 +436,7 @@ public class DrawDebugTools : MonoBehaviour
         for (int i = 0; i < Segments; i++)
         {
             Vector3 Point = Base + (X * Mathf.Cos(AngleDelta * (i + 1)) + Z * Mathf.Sin(AngleDelta * (i + 1))) * Radius;
-            InternalDrawDebugLine(LastPoint, Point, Base, Quaternion.identity, Color, PersistentLines, LifeTime);
+            InternalDrawLine(LastPoint, Point, Base, Quaternion.identity, Color, PersistentLines, LifeTime);
             LastPoint = Point;
         }
     }
@@ -449,12 +449,12 @@ public class DrawDebugTools : MonoBehaviour
         for (int i = 0; i < (Segments/2); i++)
         {
             Vector3 Point = Base + (X * Mathf.Cos(AngleDelta * (i + 1)) + Z * Mathf.Sin(AngleDelta * (i + 1))) * Radius;
-            InternalDrawDebugLine(LastPoint, Point, Base, Quaternion.identity, Color, PersistentLines, LifeTime);
+            InternalDrawLine(LastPoint, Point, Base, Quaternion.identity, Color, PersistentLines, LifeTime);
             LastPoint = Point;
         }
     }
 
-    public static void DrawDebugCapsule(Vector3 Center, float HalfHeight, float Radius, Quaternion Rotation, Color Color, bool PersistentLines = false, float LifeTime = -1.0f)
+    public static void DrawCapsule(Vector3 Center, float HalfHeight, float Radius, Quaternion Rotation, Color Color, bool PersistentLines = false, float LifeTime = -1.0f)
     {
         int Segments = 16;
 
@@ -477,13 +477,13 @@ public class DrawDebugTools : MonoBehaviour
         DrawHalfCircle(BottomPoint, AxisX, -AxisY, Color, Radius, Segments, PersistentLines, LifeTime);
         DrawHalfCircle(BottomPoint, AxisZ, -AxisY, Color, Radius, Segments, PersistentLines, LifeTime);
 
-        InternalDrawDebugLine(TopPoint + Radius * AxisX, BottomPoint + Radius * AxisX, Vector3.zero, Quaternion.identity, Color, PersistentLines, LifeTime);
-        InternalDrawDebugLine(TopPoint - Radius * AxisX, BottomPoint - Radius * AxisX, Vector3.zero, Quaternion.identity, Color, PersistentLines, LifeTime);
-        InternalDrawDebugLine(TopPoint + Radius * AxisZ, BottomPoint + Radius * AxisZ, Vector3.zero, Quaternion.identity, Color, PersistentLines, LifeTime);
-        InternalDrawDebugLine(TopPoint - Radius * AxisZ, BottomPoint - Radius * AxisZ, Vector3.zero, Quaternion.identity, Color, PersistentLines, LifeTime);
+        InternalDrawLine(TopPoint + Radius * AxisX, BottomPoint + Radius * AxisX, Vector3.zero, Quaternion.identity, Color, PersistentLines, LifeTime);
+        InternalDrawLine(TopPoint - Radius * AxisX, BottomPoint - Radius * AxisX, Vector3.zero, Quaternion.identity, Color, PersistentLines, LifeTime);
+        InternalDrawLine(TopPoint + Radius * AxisZ, BottomPoint + Radius * AxisZ, Vector3.zero, Quaternion.identity, Color, PersistentLines, LifeTime);
+        InternalDrawLine(TopPoint - Radius * AxisZ, BottomPoint - Radius * AxisZ, Vector3.zero, Quaternion.identity, Color, PersistentLines, LifeTime);
     }
 
-    public static void DrawDebugCamera(Vector3 Location, Vector3 Rotation, float FOVDeg, Color Color, float Scale = 1.0f, bool PersistentLines = false, float LifeTime = -1.0f) { }
+    public static void DrawCamera(Vector3 Location, Vector3 Rotation, float FOVDeg, Color Color, float Scale = 1.0f, bool PersistentLines = false, float LifeTime = -1.0f) { }
 
     //public static void  DrawDebugSolidPlane(FPlane P, Vector3 Loc, float Size, FColor Color, bool bPersistent = false, float LifeTime = -1) { }
 
@@ -506,10 +506,10 @@ public class DrawDebugTools : MonoBehaviour
 
         // Draw lines
         GL.PushMatrix();
-
         m_LineMaterial.SetPass(0);
-
         GL.Begin(GL.LINES);
+        Matrix4x4 Projection = GL.GetGPUProjectionMatrix(Camera.current.projectionMatrix, false);
+        GL.LoadProjectionMatrix(Projection);
         Matrix4x4 M = transform.localToWorldMatrix;
 
         for (int i = 0; i < m_BatchedLines.Count; i++)
@@ -557,22 +557,23 @@ public class DrawDebugTools : MonoBehaviour
 
     private void DrawListOfTextes()
     {
-        GL.PushMatrix();
+        GL.PushMatrix();GL.InvalidateState();
         m_DebugTextFont.material.SetPass(0);        
         GL.Begin(GL.QUADS);
 
         
         for (int i = 0; i < m_DebugTextesList.Count; i++)
         {
-            if (m_DebugTextesList[i].m_Is2DText)
-            {
-                GL.LoadPixelMatrix();
-            }
-            else
-            {
-                GL.LoadProjectionMatrix(Camera.main.projectionMatrix);
-            }
-
+            //if (m_DebugTextesList[i].m_Is2DText)
+            //{
+            //    GL.LoadPixelMatrix();
+            //}
+            //else
+            //{
+            //    GL.LoadProjectionMatrix(Camera.main.projectionMatrix);
+            //}
+            
+            GL.LoadPixelMatrix();
             GL.Color(m_DebugTextesList[i].m_TextColor);
             Vector3 OriginPosition = m_DebugTextesList[i].GetTextOriginPosition(m_DebugTextFont);
 
