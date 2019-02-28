@@ -617,7 +617,6 @@ public class DrawDebugTools : MonoBehaviour
     private static void AddDebugText(string Text, TextAnchor Anchor, Vector3 Position, Color Color, float LifeTime, bool Is2DText)
     {
         m_DebugTextesList.Add(new DebugText(Text, Anchor, Position, Color, LifeTime, Is2DText));
-        print("Text = " + Text);
     }
 
     public static void FlushPersistentDebugLines()
@@ -672,7 +671,8 @@ public class DebugText
             CharacterInfo CharInfos;
             TextFont.GetCharacterInfo(CharsArray[i], out CharInfos);
             TextWidth += CharInfos.advance;
-            TextHeight = CharInfos.glyphHeight;
+            if (i == 0)
+                TextHeight = CharInfos.glyphHeight;
         }
 
         switch (m_TextAnchor)
