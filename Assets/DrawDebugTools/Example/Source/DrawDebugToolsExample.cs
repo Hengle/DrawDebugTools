@@ -19,33 +19,33 @@ public class DrawDebugToolsExample : MonoBehaviour {
         // Draw line
         Vector3 LineStart = new Vector3(30.0f, 0.0f, 0.0f);
         Vector3 LineEnd = new Vector3(30.0f, 0.0f, 100.0f);
-        DrawDebugTools.DrawLine(LineStart, LineEnd, Color.green, false);
+        DrawDebugTools.DrawLine(LineStart, LineEnd, Color.green);
 
         // Draw point
         Vector3 PointPosition = new Vector3(40.0f, 0.0f, 0.0f);
-        DrawDebugTools.DrawPoint(PointPosition, 8.0f, Color.red, false);
+        DrawDebugTools.DrawPoint(PointPosition, 8.0f, Color.red);
 
         // Draw Box
         Vector3 BoxPosition = new Vector3(80.0f, 0.0f, 0.0f);
-        DrawDebugTools.DrawBox(BoxPosition, Quaternion.Euler(Rot), new Vector3(20.0f, 10.0f, 50.0f), Color.red, false);
+        DrawDebugTools.DrawBox(BoxPosition, Quaternion.Euler(Rot), new Vector3(20.0f, 10.0f, 50.0f), Color.red);
 
         // Draw circle
         Vector3 CirclePosition = new Vector3(150.0f, 0.0f, 0.0f);
-        DrawDebugTools.DrawCircle(CirclePosition, Quaternion.Euler(Rot), 20.0f, 24, Color.yellow, false);
+        DrawDebugTools.DrawCircle(CirclePosition, Quaternion.Euler(Rot), 20.0f, 24, Color.yellow);
 
         // Draw coordinates
         Vector3 CoorsPosition = new Vector3(200.0f, 0.0f, 0.0f);
-        DrawDebugTools.DrawCoordinateSystem(CoorsPosition, Quaternion.Euler(Rot), 20.0f, false);
+        DrawDebugTools.DrawCoordinateSystem(CoorsPosition, Quaternion.Euler(Rot), 20.0f);
 
         // Draw arrow
         Vector3 ArrowStartPosition = new Vector3(250.0f, 0.0f, 0.0f);
         Vector3 ArrowEndPosition = new Vector3(250.0f, 3.0f, 10.0f);
-        DrawDebugTools.DrawDirectionalArrow(ArrowStartPosition, ArrowEndPosition, 2.0f, Color.cyan, false);
+        DrawDebugTools.DrawDirectionalArrow(ArrowStartPosition, ArrowEndPosition, 2.0f, Color.cyan);
 
         // Draw cylinder
         Vector3 CylinderStart = new Vector3(300.0f, 0.0f, 0.0f);
         Vector3 CylinderEnd = new Vector3(300.0f, 10.0f, 30.0f);
-        DrawDebugTools.DrawCylinder(CylinderStart, CylinderEnd, Quaternion.Euler(Rot), 5.0f, 12, Color.red, false);
+        DrawDebugTools.DrawCylinder(CylinderStart, CylinderEnd, Quaternion.Euler(Rot), 5.0f, 12, Color.red);
 
         // Draw cone
         Vector3 ConePosition = new Vector3(350.0f, 0.0f, 0.0f);
@@ -55,17 +55,17 @@ public class DrawDebugToolsExample : MonoBehaviour {
         float ConeAngleHeight = 60.0f;
         int ConeSegments = 12;
 
-        DrawDebugTools.DrawCone(ConePosition, ConeDirection, ConeLength, ConeAngleWidth, ConeAngleHeight, ConeSegments, Color.green, false);
+        DrawDebugTools.DrawCone(ConePosition, ConeDirection, ConeLength, ConeAngleWidth, ConeAngleHeight, ConeSegments, Color.green);
 
         // Draw frustum
-        DrawDebugTools.DrawFrustum(GameObject.FindObjectOfType<Camera>(), Color.yellow, false);
+        DrawDebugTools.DrawFrustum(GameObject.FindObjectOfType<Camera>(), Color.yellow);
 
         // Draw capsule
         Vector3 CapsulePosition = new Vector3(400.0f, 0.0f, 0.0f);
         Vector3 CapsuleRotation = new Vector3(0.0f, 0.0f, 0.0f);
         float CapsuleHalfHeight = 10.0f;
         float CapsuleRadius = 2.0f;
-        DrawDebugTools.DrawCapsule(CapsulePosition, CapsuleHalfHeight, CapsuleRadius, Quaternion.Euler(CapsuleRotation), Color.gray, false);
+        DrawDebugTools.DrawCapsule(CapsulePosition, CapsuleHalfHeight, CapsuleRadius, Quaternion.Euler(CapsuleRotation), Color.gray);
 
         // Draw text
         DrawDebugTools.DrawString2D(TextPos, "The quick brown fox jumps over the lazy dog", anchof, Color.green, 0.0f);
@@ -74,7 +74,7 @@ public class DrawDebugToolsExample : MonoBehaviour {
         // Remove persistent lines
         if (Input.GetKeyDown(KeyCode.F))
         {
-            DrawDebugTools.FlushPersistentDebugLines();
+            DrawDebugTools.FlushDebugLines();
         }
     }
     public Vector3 TextPos=new Vector3(10.0f, 100.0f, 0.0f);
