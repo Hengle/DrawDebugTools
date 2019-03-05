@@ -71,16 +71,16 @@ public class DrawDebugTools : MonoBehaviour
         InitializeMaterials();
         m_DebugTextFont = Font.CreateDynamicFontFromOSFont("Arial", 12);
         m_DebugTextFont.RequestCharactersInTexture(" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~", 12, FontStyle.Normal);
+
     }
-
-
 
     private void OnPostRender()
     {
+
         DrawListOfLines();
         DrawListOfTextes();
     }
-        
+
     private void InitializeMaterials()
     {
         if (!m_LineMaterial)
@@ -513,7 +513,7 @@ public class DrawDebugTools : MonoBehaviour
         GL.Begin(GL.LINES);
 
         // Set projection matrix
-        GL.LoadProjectionMatrix(Camera.current.projectionMatrix);
+        //GL.LoadProjectionMatrix(Camera.current.projectionMatrix);
         Matrix4x4 M = transform.localToWorldMatrix;
 
         for (int i = 0; i < m_BatchedLines.Count; i++)
