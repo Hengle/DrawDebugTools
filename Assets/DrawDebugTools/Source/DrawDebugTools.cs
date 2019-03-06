@@ -81,9 +81,17 @@ public class DrawDebugTools : MonoBehaviour
 
     }
 
-    private void OnPostRender()
+    private void Update()
     {
+        if (Input.GetKeyDown(KeyCode.F2))
+        {
+            ToggleDebugCamera();
+        }
+    }
 
+    private IEnumerator OnPostRender()
+    {
+        yield return new WaitForEndOfFrame();
         DrawListOfLines();
         DrawListOfTextes();
     }
@@ -484,6 +492,54 @@ public class DrawDebugTools : MonoBehaviour
         InternalDrawLine(TopPoint - Radius * AxisZ, BottomPoint - Radius * AxisZ, Vector3.zero, Quaternion.identity, Color, LifeTime);
     }
 
+    private GameObject DebugCamera = null;
+    private GameObject MainCamera = null;
+    private bool m_DebugCameraIsActive = false;
+    public static void ToggleDebugCamera()
+    {
+        if (DrawDebugTools.Instance.m_DebugCameraIsActive)
+        {
+            // Delete debug camera 
+            Destroy(DrawDebugTools.Instance.DebugCamera);
+            DrawDebugTools.Instance.MainCamera.tag = "MainCamera";
+            DrawDebugTools.Instance.m_DebugCameraIsActive = false;
+        }
+        else
+        {
+            // Create debug camera
+            DrawDebugTools.Instance.MainCamera = Camera.main.gameObject;
+            DrawDebugTools.Instance.DebugCamera = new GameObject("DebugCamera");
+            DrawDebugTools.Instance.DebugCamera.transform.position = Camera.main.transform.position;
+            DrawDebugTools.Instance.DebugCamera.transform.rotation = Camera.main.transform.rotation;
+            DrawDebugTools.Instance.DebugCamera.transform.localScale = Camera.main.transform.localScale;
+
+            DrawDebugTools.Instance.MainCamera.tag = "Untagged";
+            DrawDebugTools.Instance.DebugCamera.tag = "MainCamera";
+
+            DrawDebugTools MainDDT = DrawDebugTools.Instance.MainCamera.GetComponent<DrawDebugTools>();
+            //DrawDebugTools.Instance.DebugCamera.AddComponent(). = MainDDT;
+
+            // Set components
+            Component[] ComponentsArray = DrawDebugTools.Instance.MainCamera.GetComponents(typeof(Component));            
+            System.Type[] CompsToExclude = new System.Type[] { typeof(Transform), typeof(DrawDebugTools), typeof(AudioListener) };
+            for (int i = 0; i < ComponentsArray.Length; i++)
+            {
+                if (!CompsToExclude.Contains(ComponentsArray[i].GetType()))
+                {
+                    DrawDebugTools.Instance.DebugCamera.AddComponent(ComponentsArray[i].GetType());
+                }
+            }
+
+
+
+            // Set clear flags 
+            DrawDebugTools.Instance.DebugCamera.GetComponent<Camera>().clearFlags = CameraClearFlags.Nothing;
+
+            // Set debug camera active flag
+            DrawDebugTools.Instance.m_DebugCameraIsActive = true;
+        }
+    }
+
     public static void DrawActiveCamera(Vector3 Position, Vector3 Rotation, Camera Camera, Color Color, float Scale = 1.0f, float LifeTime = 0.0f) { }
 
     public static void DrawGrid(Vector3 Position) { }
@@ -515,7 +571,7 @@ public class DrawDebugTools : MonoBehaviour
         GL.Begin(GL.LINES);
 
         // Set projection matrix
-        Matrix4x4 M = Camera.current.projectionMatrix;
+        Matrix4x4 M = Camera.main.projectionMatrix;
 
         for (int i = 0; i < m_BatchedLines.Count; i++)
         {

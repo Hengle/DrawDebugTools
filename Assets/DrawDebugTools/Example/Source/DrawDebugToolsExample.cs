@@ -59,7 +59,7 @@ public class DrawDebugToolsExample : MonoBehaviour {
         DrawDebugTools.DrawCone(ConePosition, ConeDirection, ConeLength, ConeAngleWidth, ConeAngleHeight, ConeSegments, Color.green);
 
         // Draw frustum
-        DrawDebugTools.DrawFrustum(GameObject.FindObjectOfType<Camera>(), Color.yellow);
+        DrawDebugTools.DrawFrustum(Camera.main, Color.yellow);
 
         // Draw capsule
         Vector3 CapsulePosition = new Vector3(400.0f, 0.0f, 0.0f);
@@ -76,7 +76,8 @@ public class DrawDebugToolsExample : MonoBehaviour {
             RotationText = Quaternion.LookRotation((new Vector3(0.0f, 30.0f, 0.0f) - Camera.main.transform.position).normalized);
             
         }
-        DrawDebugTools.DrawString3D(new Vector3(0.0f, 30.0f, 0.0f), RotationText, "Delta Time: " + Time.deltaTime, anchof, Color.green, 0.0f);
+        DrawDebugTools.DrawDirectionalArrow(new Vector3(0.0f, 30.0f, 0.0f), new Vector3(0.0f, 30.0f, 0.0f) + new Vector3(1.0f, 1.0f, 0.0f) * 6.0f, 5.0f, Color.red);
+        DrawDebugTools.DrawString3D(new Vector3(0.0f, 30.0f, 0.0f), Quaternion.LookRotation(new Vector3(1.0f, 1.0f, 0.0f)), "HELLO TEXT WORLD", anchof, Color.green, 0.0f);
         // Remove persistent lines
         if (Input.GetKeyDown(KeyCode.F))
         {
