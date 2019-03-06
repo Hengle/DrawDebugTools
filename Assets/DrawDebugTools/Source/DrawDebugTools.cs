@@ -52,7 +52,8 @@ public class DrawDebugTools : MonoBehaviour
 
     // Text
     private List<DebugText>             m_DebugTextesList;
-    private Font                        m_DebugTextFont;
+    private Font                        m_Debug2DTextFont;
+    private Font                        m_Debug3DTextFont;
 
     //*********************************//
     // Functions                       //
@@ -69,8 +70,14 @@ public class DrawDebugTools : MonoBehaviour
     private void Start()
     {
         InitializeMaterials();
-        m_DebugTextFont = Font.CreateDynamicFontFromOSFont("Arial", 12);
-        m_DebugTextFont.RequestCharactersInTexture(" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~", 12, FontStyle.Normal);
+
+        // Initialize fonts
+        string FontName = "Arial";
+        m_Debug2DTextFont = Font.CreateDynamicFontFromOSFont(FontName, 12);
+        m_Debug2DTextFont.RequestCharactersInTexture(" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~", 12, FontStyle.Normal);
+
+        m_Debug3DTextFont = Font.CreateDynamicFontFromOSFont(FontName, 32);
+        m_Debug3DTextFont.RequestCharactersInTexture(" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~", 32, FontStyle.Normal);
 
     }
 
@@ -282,11 +289,6 @@ public class DrawDebugTools : MonoBehaviour
 
         float AngleInc = 2.0f * Mathf.PI / (float)Segments;
 
-        Vector3 Perpondicular = Vector3.zero;
-        Vector3 Dummy = Vector3.zero;
-
-        Vector3 Center = (Start + End) / 2.0f;
-        
         // Debug End
         float Angle = 0.0f;
         Vector3 P_1;
@@ -390,13 +392,12 @@ public class DrawDebugTools : MonoBehaviour
 
     public static void DrawString2D(Vector2  Position, string Text, TextAnchor Anchor, Color  TextColor, float LifeTime = 0.0f)
     {
-        AddDebugText(Text, Anchor, Position, TextColor, LifeTime, true);
+        AddDebugText(Text, Anchor, Position, Quaternion.identity, TextColor, LifeTime, true);
     }
 
-    public static void DrawString3D(Vector3 Position, string Text, TextAnchor Anchor, Color TextColor, float LifeTime = 0.0f)
-    {
-        
-        AddDebugText(Text, Anchor, Position, TextColor, LifeTime, false);
+    public static void DrawString3D(Vector3 Position, Quaternion Rotation, string Text, TextAnchor Anchor, Color TextColor, float LifeTime = 0.0f)
+    {        
+        AddDebugText(Text, Anchor, Position, Rotation, TextColor, LifeTime, false);
     }
 
     public static void DrawFrustum(Camera Camera, Color Color, float LifeTime = 0.0f)
@@ -487,10 +488,11 @@ public class DrawDebugTools : MonoBehaviour
 
     public static void DrawGrid(Vector3 Position) { }
 
-    private static void AddDebugText(string Text, TextAnchor Anchor, Vector3 Position, Color Color, float LifeTime, bool Is2DText)
+    private static void AddDebugText(string Text, TextAnchor Anchor, Vector3 Position, Quaternion Rotation,  Color Color, float LifeTime, bool Is2DText)
     {
-        DrawDebugTools.Instance.m_DebugTextesList.Add(new DebugText(Text, Anchor, Position, Color, LifeTime, Is2DText));
+        DrawDebugTools.Instance.m_DebugTextesList.Add(new DebugText(Text, Anchor, Position, Rotation, Color, LifeTime, Is2DText));
     }
+    
 
     //public static void  DrawDebugFloatHistory(FDebugFloatHistory const & FloatHistory, FTransform const & DrawTransform, Vector32D const & DrawSize, FColor const & DrawColor, bool const & bPersistent = false, float const & LifeTime = 0.0f, uint8 const & DepthPriority = 0) { }
 
@@ -513,8 +515,7 @@ public class DrawDebugTools : MonoBehaviour
         GL.Begin(GL.LINES);
 
         // Set projection matrix
-        //GL.LoadProjectionMatrix(Camera.current.projectionMatrix);
-        Matrix4x4 M = transform.localToWorldMatrix;
+        Matrix4x4 M = Camera.current.projectionMatrix;
 
         for (int i = 0; i < m_BatchedLines.Count; i++)
         {
@@ -567,63 +568,73 @@ public class DrawDebugTools : MonoBehaviour
             }
         }
         
-        // Start drawing
+        // Draw 3D text
         GL.PushMatrix();
-
-        m_DebugTextFont.material.SetPass(0);
-
+        m_Debug3DTextFont.material.SetPass(0);
         GL.Begin(GL.QUADS);
-
+        Vector3 V_1, V_2, V_3, V_4;
         for (int i = 0; i < DebugText3DList.Count; i++)
         {
-            GL.LoadProjectionMatrix(Camera.current.projectionMatrix);
+            Matrix4x4 M = Matrix4x4.identity;
+            M = Camera.current.projectionMatrix;
+            M.SetTRS(Vector3.zero, DebugText3DList[i].m_TextRotation, Vector3.one);
 
             GL.Color(DebugText3DList[i].m_TextColor);
-            Vector3 OriginPosition = DebugText3DList[i].GetTextOriginPosition(m_DebugTextFont);
+            Vector3 OriginPosition = DebugText3DList[i].GetTextOriginPosition(m_Debug3DTextFont);
 
             for (int j = 0; j < DebugText3DList[i].m_TextString.Length; j++)
             {
                 char Char = DebugText3DList[i].m_TextString.ToCharArray()[j];
 
                 CharacterInfo CharInfos;
-                m_DebugTextFont.GetCharacterInfo(Char, out CharInfos);
+                m_Debug3DTextFont.GetCharacterInfo(Char, out CharInfos);
+
+                V_1 = OriginPosition + new Vector3(CharInfos.minX, CharInfos.minY, 0.0f);
+                V_2 = OriginPosition + new Vector3(CharInfos.minX, CharInfos.maxY, 0.0f);
+                V_3 = OriginPosition + new Vector3(CharInfos.maxX, CharInfos.maxY, 0.0f);
+                V_4 = OriginPosition + new Vector3(CharInfos.maxX, CharInfos.minY, 0.0f);
+
+                V_1 = M.MultiplyPoint(V_1);
+                V_2 = M.MultiplyPoint(V_2);
+                V_3 = M.MultiplyPoint(V_3);
+                V_4 = M.MultiplyPoint(V_4);
 
                 GL.TexCoord(CharInfos.uvBottomLeft);
-                GL.Vertex(OriginPosition + new Vector3(CharInfos.minX, CharInfos.minY, 0.0f));
+                GL.Vertex(V_1);
 
                 GL.TexCoord(CharInfos.uvTopLeft);
-                GL.Vertex(OriginPosition + new Vector3(CharInfos.minX, CharInfos.maxY, 0.0f));
+                GL.Vertex(V_2);
 
                 GL.TexCoord(CharInfos.uvTopRight);
-                GL.Vertex(OriginPosition + new Vector3(CharInfos.maxX, CharInfos.maxY, 0.0f));
+                GL.Vertex(V_3);
 
                 GL.TexCoord(CharInfos.uvBottomRight);
-                GL.Vertex(OriginPosition + new Vector3(CharInfos.maxX, CharInfos.minY, 0.0f));
+                GL.Vertex(V_4);
                 OriginPosition += new Vector3(CharInfos.advance, 0.0f, 0.0f);
             }
 
         }
-GL.End();
+        GL.End();
         GL.PopMatrix();
 
+
+        // Draw 2D text
         GL.PushMatrix();
-
-        m_DebugTextFont.material.SetPass(0);
-
+        m_Debug2DTextFont.material.SetPass(0);
         GL.Begin(GL.QUADS);
         for (int i = 0; i < DebugText2DList.Count; i++)
         {
             GL.LoadPixelMatrix();
 
             GL.Color(DebugText2DList[i].m_TextColor);
-            Vector3 OriginPosition = DebugText2DList[i].GetTextOriginPosition(m_DebugTextFont);
+            Vector3 OriginPosition = DebugText2DList[i].GetTextOriginPosition(m_Debug2DTextFont);
 
             for (int j = 0; j < DebugText2DList[i].m_TextString.Length; j++)
             {
                 char Char = DebugText2DList[i].m_TextString.ToCharArray()[j];
 
                 CharacterInfo CharInfos;
-                m_DebugTextFont.GetCharacterInfo(Char, out CharInfos);
+                m_Debug2DTextFont.GetCharacterInfo(Char, out CharInfos);
 
                 GL.TexCoord(CharInfos.uvBottomLeft);
                 GL.Vertex(OriginPosition + new Vector3(CharInfos.minX, CharInfos.minY, 0.0f));
@@ -640,12 +651,10 @@ GL.End();
             }
 
         }
-
         GL.End();
         GL.PopMatrix();
 
-
-
+        
         // Update text life time
         for (int i = m_DebugTextesList.Count - 1; i >= 0; i--)
         {
@@ -673,6 +682,7 @@ public class DebugText
     public string                   m_TextString;
     public TextAnchor               m_TextAnchor;
     public Vector3                  m_TextPosition;
+    public Quaternion               m_TextRotation;
     public Color                    m_TextColor;
     public float                    m_RemainLifeTime;
     public bool                     m_Is2DText;
@@ -681,11 +691,12 @@ public class DebugText
     {
     }
 
-    public DebugText(string Text, TextAnchor TextAnchor, Vector3 TextPosition, Color Color, float LifeTime, bool Is2DText)
+    public DebugText(string Text, TextAnchor TextAnchor, Vector3 TextPosition, Quaternion TextRotation, Color Color, float LifeTime, bool Is2DText)
     {
         m_TextString        = Text;
         m_TextAnchor        = TextAnchor;
         m_TextPosition      = TextPosition;
+        m_TextRotation      = TextRotation;
         m_TextColor         = Color;
         m_RemainLifeTime    = LifeTime;
         m_Is2DText          = Is2DText;

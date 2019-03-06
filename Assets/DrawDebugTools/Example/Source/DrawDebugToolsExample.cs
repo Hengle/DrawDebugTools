@@ -14,7 +14,8 @@ public class DrawDebugToolsExample : MonoBehaviour {
         float SinValue = Mathf.Sin(Time.timeSinceLevelLoad) * 40.0f;
         Vector3 Pos = new Vector3(0.0f, 0.0f, SinValue);
         DrawDebugTools.DrawSphere(Pos, Quaternion.Euler(Rot), 20.0f, 8, Color.gray);
-        DrawDebugTools.DrawString2D(Camera.main.WorldToScreenPoint(Pos), Pos.ToString(), TextAnchor.UpperLeft, Color.cyan, 0.0f);
+        if (Camera.main)
+            DrawDebugTools.DrawString2D(Camera.main.WorldToScreenPoint(Pos), Pos.ToString(), TextAnchor.UpperLeft, Color.cyan, 0.0f);
         
         // Draw line
         Vector3 LineStart = new Vector3(30.0f, 0.0f, 0.0f);
@@ -69,8 +70,13 @@ public class DrawDebugToolsExample : MonoBehaviour {
 
         // Draw text
         DrawDebugTools.DrawString2D(TextPos, "The quick brown fox jumps over the lazy dog", anchof, Color.green, 0.0f);
-        DrawDebugTools.DrawString3D(new Vector3(0.0f, 30.0f, 0.0f), "The quick brown fox jumps over the lazy dog | Delta Time: " + Time.deltaTime, anchof, Color.green, 0.0f);
-
+        Quaternion RotationText=Quaternion.identity;
+        if (Camera.main)
+        {
+            RotationText = Quaternion.LookRotation((new Vector3(0.0f, 30.0f, 0.0f) - Camera.main.transform.position).normalized);
+            
+        }
+        DrawDebugTools.DrawString3D(new Vector3(0.0f, 30.0f, 0.0f), RotationText, "Delta Time: " + Time.deltaTime, anchof, Color.green, 0.0f);
         // Remove persistent lines
         if (Input.GetKeyDown(KeyCode.F))
         {
