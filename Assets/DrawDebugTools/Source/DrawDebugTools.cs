@@ -85,7 +85,7 @@ public class DrawDebugTools : MonoBehaviour
         m_Debug2DTextFont = Font.CreateDynamicFontFromOSFont(FontName, 12);
         m_Debug2DTextFont.RequestCharactersInTexture(" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~", 12, FontStyle.Normal);
 
-        m_Debug3DTextFont = Font.CreateDynamicFontFromOSFont(FontName, 24);
+        m_Debug3DTextFont = Font.CreateDynamicFontFromOSFont(FontName, 20);
         m_Debug3DTextFont.RequestCharactersInTexture(" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~", 32, FontStyle.Normal);
 
     }
@@ -106,7 +106,8 @@ public class DrawDebugTools : MonoBehaviour
     // Debug camera
     private void HandleDebugCamera()
     {
-        if (Input.GetKeyDown(KeyCode.F2))
+        // Toggle debug camera 
+        if (Input.GetKey(KeyCode.LeftShift) && Input.GetKeyDown(KeyCode.F5))
         {
             ToggleDebugCamera();
         }
@@ -114,11 +115,18 @@ public class DrawDebugTools : MonoBehaviour
         if (m_DebugCameraIsActive)
         {
             // Time manipulation
-            if (Input.GetKeyDown(KeyCode.F5))
+            if (Input.GetKey(KeyCode.LeftShift) && Input.GetKeyDown(KeyCode.F6))    // Freeze time
                 Time.timeScale = Time.timeScale == 0.0f ? 1.0f : 0.0f;
 
+            float ClampedTimeScale = Time.timeScale;
+            if (Input.GetKey(KeyCode.LeftShift) && Input.GetKeyDown(KeyCode.F7))    // Slow time
+                ClampedTimeScale -= 0.1f;
+
+            if (Input.GetKey(KeyCode.LeftShift) && Input.GetKeyDown(KeyCode.F8))    // Speed up time
+                ClampedTimeScale += 0.1f;
+            Time.timeScale = Mathf.Clamp(ClampedTimeScale, 0.0f, 100.0f);
+
             // Change camera movement speed
-            print(Input.mouseScrollDelta.ToString());
             float SpeedMultiplierSensitivity = m_DebugCameraMovSpeedMultiplier < 1.0f ? 2.0f : 10.0f;
             m_DebugCameraMovSpeedMultiplier += Input.mouseScrollDelta.y * SpeedMultiplierSensitivity * Time.unscaledDeltaTime;
             m_DebugCameraMovSpeedMultiplier = Mathf.Clamp(m_DebugCameraMovSpeedMultiplier, m_DebugCameraMovSpeedMultiplierRange.x, m_DebugCameraMovSpeedMultiplierRange.y);
@@ -135,8 +143,10 @@ public class DrawDebugTools : MonoBehaviour
             if (Input.GetKey(KeyCode.Q))
                 DirectionSpeed.y = -0.8f * MoveSpeed * Time.unscaledDeltaTime;
 
+            // Set debug cam position
             m_DebugCamera.transform.position += m_DebugCamera.transform.right * DirectionSpeed.x + m_DebugCamera.transform.forward * DirectionSpeed.z + Vector3.up * DirectionSpeed.y;
 
+            // Set debug cam rotation
             if (Input.GetMouseButton(0))
             {
                 m_DebugCameraYaw += Input.GetAxis("Mouse X") * RotateSpeed * Time.unscaledDeltaTime;
@@ -145,13 +155,14 @@ public class DrawDebugTools : MonoBehaviour
             }
 
             // Debug camera raycast
-            RaycastHit DebugHit;
-            if (Physics.Raycast(m_DebugCamera.transform.position, m_DebugCamera.transform.forward, out DebugHit, 1000.0f))
+            RaycastHit DebugHitInfos;
+            if (Physics.Raycast(m_DebugCamera.transform.position, m_DebugCamera.transform.forward, out DebugHitInfos, 1000.0f))
             {
-                DrawLine(DebugHit.point, DebugHit.point + DebugHit.normal, Color.red);
+                // Draw normal line
+                DrawLine(DebugHitInfos.point, DebugHitInfos.point + DebugHitInfos.normal, Color.red);
             }
 
-            // Debug camera text and raycast infos
+            // Debug camera top text
             float TextTopMargin = 50.0f;
 
             float TextLinesHeight = 0.0f;
@@ -166,44 +177,47 @@ public class DrawDebugTools : MonoBehaviour
             TextLinesHeight += 15.0f;
             DrawString2D(new Vector2(20.0f, Screen.height - TextTopMargin - TextLinesHeight), "Mov speed multiplier: "+ m_DebugCameraMovSpeedMultiplier.ToString("00.00"), TextAnchor.LowerLeft, Color.yellow);
 
+            TextLinesHeight += 15.0f;
+            DrawString2D(new Vector2(20.0f, Screen.height - TextTopMargin - TextLinesHeight), "Time scale: " + Time.timeScale, TextAnchor.LowerLeft, Color.yellow);
 
-            if (DebugHit.transform != null)
+            // Display camera raycast infos if we hit a gameobject with collider
+            if (DebugHitInfos.collider != null)
             {
                 TextLinesHeight += 30.0f;
                 DrawString2D(new Vector2(20.0f, Screen.height - TextTopMargin - TextLinesHeight), "Debug RaycastHit Infos", TextAnchor.LowerLeft, Color.cyan);
 
                 TextLinesHeight += 20.0f;
-                DrawString2D(new Vector2(20.0f, Screen.height - TextTopMargin - TextLinesHeight), "Ray hit point: "+DebugHit.point.ToString(), TextAnchor.LowerLeft, Color.yellow);
+                DrawString2D(new Vector2(20.0f, Screen.height - TextTopMargin - TextLinesHeight), "Ray hit point: "+DebugHitInfos.point.ToString(), TextAnchor.LowerLeft, Color.yellow);
 
                 TextLinesHeight += 15.0f;
-                DrawString2D(new Vector2(20.0f, Screen.height - TextTopMargin - TextLinesHeight), "Ray hit normal: " + DebugHit.normal.ToString(), TextAnchor.LowerLeft, Color.yellow);
+                DrawString2D(new Vector2(20.0f, Screen.height - TextTopMargin - TextLinesHeight), "Ray hit normal: " + DebugHitInfos.normal.ToString(), TextAnchor.LowerLeft, Color.yellow);
 
                 TextLinesHeight += 15.0f;
-                DrawString2D(new Vector2(20.0f, Screen.height - TextTopMargin - TextLinesHeight), "Ray hit barycentricCoordinate: " + DebugHit.barycentricCoordinate.ToString(), TextAnchor.LowerLeft, Color.yellow);
+                DrawString2D(new Vector2(20.0f, Screen.height - TextTopMargin - TextLinesHeight), "Ray hit barycentricCoordinate: " + DebugHitInfos.barycentricCoordinate.ToString(), TextAnchor.LowerLeft, Color.yellow);
 
                 TextLinesHeight += 15.0f;
-                DrawString2D(new Vector2(20.0f, Screen.height - TextTopMargin - TextLinesHeight), "Ray hit distance: " + DebugHit.distance.ToString(), TextAnchor.LowerLeft, Color.yellow);
+                DrawString2D(new Vector2(20.0f, Screen.height - TextTopMargin - TextLinesHeight), "Ray hit distance: " + DebugHitInfos.distance.ToString(), TextAnchor.LowerLeft, Color.yellow);
 
                 TextLinesHeight += 15.0f;
-                DrawString2D(new Vector2(20.0f, Screen.height - TextTopMargin - TextLinesHeight), "Ray hit triangleIndex: " + DebugHit.triangleIndex.ToString(), TextAnchor.LowerLeft, Color.yellow);
+                DrawString2D(new Vector2(20.0f, Screen.height - TextTopMargin - TextLinesHeight), "Ray hit triangleIndex: " + DebugHitInfos.triangleIndex.ToString(), TextAnchor.LowerLeft, Color.yellow);
 
                 TextLinesHeight += 15.0f;
-                DrawString2D(new Vector2(20.0f, Screen.height - TextTopMargin - TextLinesHeight), "Ray hit textureCoord: " + DebugHit.textureCoord.ToString(), TextAnchor.LowerLeft, Color.yellow);
+                DrawString2D(new Vector2(20.0f, Screen.height - TextTopMargin - TextLinesHeight), "Ray hit textureCoord: " + DebugHitInfos.textureCoord.ToString(), TextAnchor.LowerLeft, Color.yellow);
 
                 TextLinesHeight += 15.0f;
-                DrawString2D(new Vector2(20.0f, Screen.height - TextTopMargin - TextLinesHeight), "Ray hit textureCoord2: " + DebugHit.textureCoord2.ToString(), TextAnchor.LowerLeft, Color.yellow);
+                DrawString2D(new Vector2(20.0f, Screen.height - TextTopMargin - TextLinesHeight), "Ray hit textureCoord2: " + DebugHitInfos.textureCoord2.ToString(), TextAnchor.LowerLeft, Color.yellow);
 
                 TextLinesHeight += 15.0f;
-                DrawString2D(new Vector2(20.0f, Screen.height - TextTopMargin - TextLinesHeight), "Ray hit Object name: \"" + DebugHit.transform.name + "\"", TextAnchor.LowerLeft, Color.yellow);
+                DrawString2D(new Vector2(20.0f, Screen.height - TextTopMargin - TextLinesHeight), "Ray hit Object name: \"" + DebugHitInfos.transform.name + "\"", TextAnchor.LowerLeft, Color.yellow);
 
-                // Display materials names if any
-                if (DebugHit.transform.GetComponent<MeshRenderer>() != null || DebugHit.transform.GetComponent<SkinnedMeshRenderer>() != null)
+                // Display materials names if any exits
+                if (DebugHitInfos.transform.GetComponent<MeshRenderer>() != null || DebugHitInfos.transform.GetComponent<SkinnedMeshRenderer>() != null)
                 {
                     Material[] MatsArray;
-                    if(DebugHit.transform.GetComponent<MeshRenderer>() != null)
-                        MatsArray = DebugHit.transform.GetComponent<MeshRenderer>().materials;
+                    if(DebugHitInfos.transform.GetComponent<MeshRenderer>() != null)
+                        MatsArray = DebugHitInfos.transform.GetComponent<MeshRenderer>().materials;
                     else
-                        MatsArray = DebugHit.transform.GetComponent<SkinnedMeshRenderer>().materials;
+                        MatsArray = DebugHitInfos.transform.GetComponent<SkinnedMeshRenderer>().materials;
 
                     TextLinesHeight += 30.0f;
                     DrawString2D(new Vector2(30.0f, Screen.height - TextTopMargin - TextLinesHeight), "Debug Mesh Materials", TextAnchor.LowerLeft, Color.cyan);
@@ -217,16 +231,19 @@ public class DrawDebugTools : MonoBehaviour
             }
 
             // Display debug camera controls
-            TextLinesHeight = 80.0f;
+            TextLinesHeight = 100.0f;
             DrawString2D(new Vector2(20.0f, TextLinesHeight), "Controls", TextAnchor.LowerLeft, Color.cyan);
             TextLinesHeight -= 20.0f;
-            DrawString2D(new Vector2(20.0f, TextLinesHeight), "Change movement speed: MouseWheel or +/-", TextAnchor.LowerLeft, Color.yellow);
+            DrawString2D(new Vector2(20.0f, TextLinesHeight), "Toggle debug cam: LeftShift + F5", TextAnchor.LowerLeft, Color.yellow);
             TextLinesHeight -= 15.0f;
-            DrawString2D(new Vector2(20.0f, TextLinesHeight), "Freeze time: F5", TextAnchor.LowerLeft, Color.yellow);
+            DrawString2D(new Vector2(20.0f, TextLinesHeight), "Change mov speed: MouseWheel", TextAnchor.LowerLeft, Color.yellow);
+
             TextLinesHeight -= 15.0f;
-            DrawString2D(new Vector2(20.0f, TextLinesHeight), "Slow down time: F6", TextAnchor.LowerLeft, Color.yellow);
+            DrawString2D(new Vector2(20.0f, TextLinesHeight), "Freeze time: LeftShift + F6", TextAnchor.LowerLeft, Color.yellow);
             TextLinesHeight -= 15.0f;
-            DrawString2D(new Vector2(20.0f, TextLinesHeight), "Speed up time: F7", TextAnchor.LowerLeft, Color.yellow);
+            DrawString2D(new Vector2(20.0f, TextLinesHeight), "Slow down time: LeftShift + F7", TextAnchor.LowerLeft, Color.yellow);
+            TextLinesHeight -= 15.0f;
+            DrawString2D(new Vector2(20.0f, TextLinesHeight), "Speed up time: LeftShift + F8", TextAnchor.LowerLeft, Color.yellow);
         }
     }
 
@@ -237,8 +254,7 @@ public class DrawDebugTools : MonoBehaviour
             // Delete debug camera 
             Destroy(DrawDebugTools.Instance.m_DebugCamera);
             DrawDebugTools.Instance.m_MainCamera.tag = "MainCamera";
-            DrawDebugTools.Instance.m_DebugCameraIsActive = false;
-           
+            DrawDebugTools.Instance.m_DebugCameraIsActive = false;           
         }
         else
         {
@@ -249,9 +265,11 @@ public class DrawDebugTools : MonoBehaviour
             DrawDebugTools.Instance.m_DebugCamera.transform.rotation = Camera.main.transform.rotation;
             DrawDebugTools.Instance.m_DebugCamera.transform.localScale = Camera.main.transform.localScale;
 
+            // Set debug initial camera pitch & yaw rotation value
             DrawDebugTools.Instance.m_DebugCameraPitch = DrawDebugTools.Instance.m_MainCamera.transform.eulerAngles.x;
             DrawDebugTools.Instance.m_DebugCameraYaw = DrawDebugTools.Instance.m_MainCamera.transform.eulerAngles.y;
 
+            // Switch cameras tag
             DrawDebugTools.Instance.m_MainCamera.tag = "Untagged";
             DrawDebugTools.Instance.m_DebugCamera.tag = "MainCamera";
 
@@ -265,15 +283,23 @@ public class DrawDebugTools : MonoBehaviour
                     DrawDebugTools.Instance.m_DebugCamera.AddComponent(ComponentsArray[i].GetType());
                 }
             }
-            
+
+            // Set debug camera new far clip plane
+            DrawDebugTools.Instance.m_DebugCamera.GetComponent<Camera>().farClipPlane = 10000.0f;
+
             // Set debug camera active flag
             DrawDebugTools.Instance.m_DebugCameraIsActive = true;
         }
     }
-
     // Debug camera end
     //////////////////////////////////////////////
 
+    //////////////////////////////////////////////
+    // Float history
+
+    // Float history end
+    //////////////////////////////////////////////
+    ///
     private void InitializeMaterials()
     {
         if (!m_LineMaterial)
@@ -462,8 +488,6 @@ public class DrawDebugTools : MonoBehaviour
         InternalDrawLine(Position, Position + new Vector3(0.0f, 0.0f, Scale), Position, Rotation, Color.blue, LifeTime);
     }
 
-    public static void Draw2DDonut(  float InnerRadius, float OuterRadius, int Segments, Color Color, float LifeTime = 0.0f) { }
-
     public static void DrawCylinder(Vector3 Start, Vector3 End, Quaternion Rotation, float Radius, int Segments, Color Color, float LifeTime = 0.0f)
     {
         Segments = Mathf.Max(Segments, 4);
@@ -591,7 +615,7 @@ public class DrawDebugTools : MonoBehaviour
 
     public static void DrawFrustum(Camera Camera, Color Color, float LifeTime = 0.0f)
     {
-        Plane[] FrustumPlanes = GeometryUtility.CalculateFrustumPlanes(Camera);
+        Plane[] FrustumPlanes = DrawDebugTools.Instance.m_DebugCameraIsActive ? GeometryUtility.CalculateFrustumPlanes(DrawDebugTools.Instance.m_MainCamera.GetComponent<Camera>()) : GeometryUtility.CalculateFrustumPlanes(Camera);
         Vector3[] NearPlaneCorners = new Vector3[4]; 
         Vector3[] FarePlaneCorners = new Vector3[4]; 
         
@@ -609,13 +633,6 @@ public class DrawDebugTools : MonoBehaviour
             InternalDrawLine(FarePlaneCorners[i], FarePlaneCorners[(i + 1) % 4], Vector3.zero, Quaternion.identity, Color, LifeTime);
             InternalDrawLine(NearPlaneCorners[i], FarePlaneCorners[i], Vector3.zero, Quaternion.identity, Color, LifeTime);
         }
-    }
-    private static Vector3 GetIntersectionPointOfPlanes(Plane Plane_1, Plane Plane_2, Plane Plane_3)
-    { 
-        return ((-Plane_1.distance * Vector3.Cross(Plane_2.normal, Plane_3.normal)) +
-                (-Plane_2.distance * Vector3.Cross(Plane_3.normal, Plane_1.normal)) +
-                (-Plane_3.distance * Vector3.Cross(Plane_1.normal, Plane_2.normal))) /
-            (Vector3.Dot(Plane_1.normal, Vector3.Cross(Plane_2.normal, Plane_3.normal)));
     }
 
     public static void DrawCircle(Vector3 Base, Vector3 X, Vector3 Z, Color Color, float Radius, int Segments, float LifeTime = 0.0f)
@@ -681,11 +698,18 @@ public class DrawDebugTools : MonoBehaviour
     {
         DrawDebugTools.Instance.m_DebugTextesList.Add(new DebugText(Text, Anchor, Position, Rotation, Color, LifeTime, Is2DText));
     }
-    
 
     //public static void  DrawDebugFloatHistory(FDebugFloatHistory const & FloatHistory, FTransform const & DrawTransform, Vector32D const & DrawSize, FColor const & DrawColor, bool const & bPersistent = false, float const & LifeTime = 0.0f, uint8 const & DepthPriority = 0) { }
 
     //public static void  DrawDebugFloatHistory(FDebugFloatHistory const & FloatHistory, Vector3 const & DrawLocation, Vector32D const & DrawSize, FColor const & DrawColor, bool const & bPersistent = false, float const & LifeTime = 0.0f, uint8 const & DepthPriority = 0) { }
+
+    private static Vector3 GetIntersectionPointOfPlanes(Plane Plane_1, Plane Plane_2, Plane Plane_3)
+    {
+        return ((-Plane_1.distance * Vector3.Cross(Plane_2.normal, Plane_3.normal)) +
+                (-Plane_2.distance * Vector3.Cross(Plane_3.normal, Plane_1.normal)) +
+                (-Plane_3.distance * Vector3.Cross(Plane_1.normal, Plane_2.normal))) /
+            (Vector3.Dot(Plane_1.normal, Vector3.Cross(Plane_2.normal, Plane_3.normal)));
+    }
 
     private void DrawListOfLines()
     {
