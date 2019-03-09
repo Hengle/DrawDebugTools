@@ -278,7 +278,7 @@ public class DrawDebugTools : MonoBehaviour
             System.Type[] CompsToInclude  = new System.Type[] { typeof(Transform), typeof(Camera)};
             for (int i = 0; i < ComponentsArray.Length; i++)
             {
-                if (CompsToExclude.Contains(ComponentsArray[i].GetType()))
+                if (CompsToInclude.Contains(ComponentsArray[i].GetType()))
                 {
                     DrawDebugTools.Instance.m_DebugCamera.AddComponent(ComponentsArray[i].GetType());
                 }
