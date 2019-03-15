@@ -11,12 +11,14 @@ public class DrawDebugToolsExample : MonoBehaviour {
     public Vector3 Rot = Vector3.zero;
 	private void Update () {
         // Draw moving sphere
-        float SinValue = Mathf.Sin(Time.timeSinceLevelLoad) * 4.0f;
+        float SinValue = Mathf.Sin(Time.timeSinceLevelLoad *4.0f) * FloatMultiplier;
         Vector3 Pos = new Vector3(0.0f, 0.0f, SinValue);
         DrawDebugTools.DrawSphere(Pos, Quaternion.Euler(Rot), 2.0f, 8, Color.gray);
         if (Camera.main)
+        {            
             DrawDebugTools.DrawString2D(Camera.main.WorldToScreenPoint(Pos), Pos.ToString(), TextAnchor.UpperLeft, Color.cyan, 0.0f);
-        
+        }
+
         // Draw line
         Vector3 LineStart = new Vector3(3.0f, 0.0f, 0.0f);
         Vector3 LineEnd = new Vector3(3.0f, 0.0f, 10.0f);
@@ -76,9 +78,19 @@ public class DrawDebugToolsExample : MonoBehaviour {
             
         }
         DrawDebugTools.DrawString3D(new Vector3(0.0f, 30.0f, 0.0f), Quaternion.Euler(Rot), "HELLO TEXT WORLD", anchof, Color.green, 0.0f);
-        
+
+        // Draw float debug
+        if (SinValue > 0.0f) SinValue *= 2.0f;
+        if (Input.GetKey(KeyCode.W)) m += 500.0f * Time.deltaTime;
+        if (Input.GetKey(KeyCode.S)) m -= 500.0f * Time.deltaTime;
+        if (Mathf.Abs(m) > 100.0f)
+            DrawDebugTools.DrawFloatGraph("Moving Sphere: Z Value", m, 1000.0f, false, FloatSamplesCount);
     }
+
+    float m = 0.0f;
     public Vector3 TextPos=new Vector3(10.0f, 100.0f, 0.0f);
     public TextAnchor anchof;
+    public float FloatMultiplier = 1.0f;
+    public int FloatSamplesCount = 10;
 
 }

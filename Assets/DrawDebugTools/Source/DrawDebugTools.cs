@@ -5,36 +5,10 @@ using System.Xml.Serialization;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
-//*********************************//
-// Structures | Enums              //
-//*********************************//
-[System.Serializable]
-public class BatchedLine
-{
-    public Vector3 Start;
-    public Vector3 End;
-    public Vector3 PivotPoint;
-    public Quaternion Rotation;
-    public Color Color;
-    public float RemainLifeTime;
 
-    public BatchedLine(Vector3 InStart, Vector3 InEnd, Vector3 InPivotPoint, Quaternion InRotation, Color InColor, float InRemainLifeTime)
-    {
-        Start = InStart;
-        End = InEnd;
-        PivotPoint = InPivotPoint;
-        Rotation = InRotation;
-        Color = InColor;
-        RemainLifeTime = InRemainLifeTime;
-    }
-};
-
-public enum EDrawPlaneAxis
-{
-    XZ,
-    XY,
-    YZ
-};
+//*********************************//
+// Main class                      //
+//*********************************//
 
 public class DrawDebugTools : MonoBehaviour
 {
@@ -63,6 +37,9 @@ public class DrawDebugTools : MonoBehaviour
     private float                       m_DebugCameraYaw = 0.0f;
     private float                       m_DebugCameraMovSpeedMultiplier = 1.0f;
     private Vector2                     m_DebugCameraMovSpeedMultiplierRange = new Vector2(0.05f, 10.0f);
+
+    // Debug float 
+    public List<DebugFloat>            m_DebugFloatsList;
 
     //*********************************//
     // Functions                       //
@@ -93,8 +70,9 @@ public class DrawDebugTools : MonoBehaviour
     private IEnumerator OnPostRender()
     {
         yield return new WaitForEndOfFrame();
-        DrawListOfLines();
-        DrawListOfTextes();
+        HandleDrawingListOfLines();
+        HandleDrawingListOfTextes();
+        HandleDrawingListOfFloatDebugs();
     }
 
     private void Update()
@@ -107,7 +85,7 @@ public class DrawDebugTools : MonoBehaviour
     private void HandleDebugCamera()
     {
         // Toggle debug camera 
-        if (Input.GetKey(KeyCode.LeftShift) && Input.GetKeyDown(KeyCode.F5))
+        if (Input.GetKeyDown(KeyCode.F9))
         {
             ToggleDebugCamera();
         }
@@ -115,14 +93,14 @@ public class DrawDebugTools : MonoBehaviour
         if (m_DebugCameraIsActive)
         {
             // Time manipulation
-            if (Input.GetKey(KeyCode.LeftShift) && Input.GetKeyDown(KeyCode.F6))    // Freeze time
+            if (Input.GetKeyDown(KeyCode.F10))    // Freeze time
                 Time.timeScale = Time.timeScale == 0.0f ? 1.0f : 0.0f;
 
             float ClampedTimeScale = Time.timeScale;
-            if (Input.GetKey(KeyCode.LeftShift) && Input.GetKeyDown(KeyCode.F7))    // Slow time
+            if (Input.GetKeyDown(KeyCode.F11))    // Slow time
                 ClampedTimeScale -= 0.1f;
 
-            if (Input.GetKey(KeyCode.LeftShift) && Input.GetKeyDown(KeyCode.F8))    // Speed up time
+            if (Input.GetKeyDown(KeyCode.F12))    // Speed up time
                 ClampedTimeScale += 0.1f;
             Time.timeScale = Mathf.Clamp(ClampedTimeScale, 0.0f, 100.0f);
 
@@ -234,16 +212,15 @@ public class DrawDebugTools : MonoBehaviour
             TextLinesHeight = 100.0f;
             DrawString2D(new Vector2(20.0f, TextLinesHeight), "Controls", TextAnchor.LowerLeft, Color.cyan);
             TextLinesHeight -= 20.0f;
-            DrawString2D(new Vector2(20.0f, TextLinesHeight), "Toggle debug cam: LeftShift + F5", TextAnchor.LowerLeft, Color.yellow);
-            TextLinesHeight -= 15.0f;
             DrawString2D(new Vector2(20.0f, TextLinesHeight), "Change mov speed: MouseWheel", TextAnchor.LowerLeft, Color.yellow);
-
             TextLinesHeight -= 15.0f;
-            DrawString2D(new Vector2(20.0f, TextLinesHeight), "Freeze time: LeftShift + F6", TextAnchor.LowerLeft, Color.yellow);
+            DrawString2D(new Vector2(20.0f, TextLinesHeight), "Toggle debug cam: F9", TextAnchor.LowerLeft, Color.yellow);
             TextLinesHeight -= 15.0f;
-            DrawString2D(new Vector2(20.0f, TextLinesHeight), "Slow down time: LeftShift + F7", TextAnchor.LowerLeft, Color.yellow);
+            DrawString2D(new Vector2(20.0f, TextLinesHeight), "Freeze time: F10", TextAnchor.LowerLeft, Color.yellow);
             TextLinesHeight -= 15.0f;
-            DrawString2D(new Vector2(20.0f, TextLinesHeight), "Speed up time: LeftShift + F8", TextAnchor.LowerLeft, Color.yellow);
+            DrawString2D(new Vector2(20.0f, TextLinesHeight), "Slow down time: F11", TextAnchor.LowerLeft, Color.yellow);
+            TextLinesHeight -= 15.0f;
+            DrawString2D(new Vector2(20.0f, TextLinesHeight), "Speed up time: F12", TextAnchor.LowerLeft, Color.yellow);
         }
     }
 
@@ -699,7 +676,29 @@ public class DrawDebugTools : MonoBehaviour
         DrawDebugTools.Instance.m_DebugTextesList.Add(new DebugText(Text, Anchor, Position, Rotation, Color, LifeTime, Is2DText));
     }
 
-    //public static void  DrawDebugFloatHistory(FDebugFloatHistory const & FloatHistory, FTransform const & DrawTransform, Vector32D const & DrawSize, FColor const & DrawColor, bool const & bPersistent = false, float const & LifeTime = 0.0f, uint8 const & DepthPriority = 0) { }
+    public static void DrawFloatGraph(string UniqueGraphName, float FloatValueToDebug, float GraphHalfMinMaxRange = 100.0f, bool AutoAdjustMinMaxRange = false, int SamplesCount = 50, float LifeTime = 0.0f)
+    {
+        bool IsFloatAlreadyExists = false;
+        int FloatIndex = -1;
+
+        for (int i = 0; i < DrawDebugTools.Instance.m_DebugFloatsList.Count; i++)
+        {
+            if (Instance.m_DebugFloatsList[i].m_UniqueFloatName == UniqueGraphName)
+            {
+                IsFloatAlreadyExists = true;
+                FloatIndex = i;
+            }
+        }
+
+        if (IsFloatAlreadyExists)
+        {
+            Instance.m_DebugFloatsList[FloatIndex].AddValue(FloatValueToDebug);
+        }
+        else
+        {
+            Instance.m_DebugFloatsList.Add(new DebugFloat(UniqueGraphName, SamplesCount, GraphHalfMinMaxRange, AutoAdjustMinMaxRange));
+        }
+    }
 
     //public static void  DrawDebugFloatHistory(FDebugFloatHistory const & FloatHistory, Vector3 const & DrawLocation, Vector32D const & DrawSize, FColor const & DrawColor, bool const & bPersistent = false, float const & LifeTime = 0.0f, uint8 const & DepthPriority = 0) { }
 
@@ -711,7 +710,7 @@ public class DrawDebugTools : MonoBehaviour
             (Vector3.Dot(Plane_1.normal, Vector3.Cross(Plane_2.normal, Plane_3.normal)));
     }
 
-    private void DrawListOfLines()
+    private void HandleDrawingListOfLines()
     {
         if (m_BatchedLines.Count == 0)
             return;
@@ -763,7 +762,7 @@ public class DrawDebugTools : MonoBehaviour
         }
     }
 
-    private void DrawListOfTextes()
+    private void HandleDrawingListOfTextes()
     {
         // Filter 2D textes
         List<DebugText> DebugText2DList = new List<DebugText>();
@@ -879,6 +878,112 @@ public class DrawDebugTools : MonoBehaviour
         }
     }
 
+    private void HandleDrawingListOfFloatDebugs()
+    {
+        float           GraphWidth = 300.0f;
+        float           GraphHeight = 100.0f;
+        float           GrpahMargin_Right = 5.0f;
+        float           GrpahMargin_Buttom = 5.0f;
+        Vector3         OriginPosition = Vector3.zero;
+        DebugFloat[]    DebugFloatsArray = DrawDebugTools.Instance.m_DebugFloatsList.ToArray();
+        float           TextAlpha = 0.5f;
+
+        // Draw background
+        GL.PushMatrix();
+        GL.Begin(GL.QUADS);
+        m_AlphaMaterial.SetPass(0);
+        GL.Color(new Color(0.3f, 1.0f, 0.2f, 0.1f));
+        GL.LoadPixelMatrix();
+        
+        for (int i = 0; i < DebugFloatsArray.Length; i++)
+        {
+            // Set origin position
+            OriginPosition = new Vector3(Screen.width - GraphWidth - GrpahMargin_Right, GrpahMargin_Buttom);
+
+            // Draw text
+            float TextButtomMargin = 5.0f;
+            // Draw graph title
+            AddDebugText(DebugFloatsArray[i].m_UniqueFloatName, TextAnchor.LowerLeft, OriginPosition + new Vector3(0.0f, GraphHeight+ TextButtomMargin, 0.0f), Quaternion.identity, Color.white, 0.0f, true);
+            // Draw min and max values
+            AddDebugText(DebugFloatsArray[i].m_GraphValueLengh.ToString(), TextAnchor.UpperLeft, OriginPosition + new Vector3(2.0f, GraphHeight, 0.0f), Quaternion.identity, Color.white * new Color(1.0f, 1.0f, 1.0f, TextAlpha), 0.0f, true);
+            AddDebugText((-DebugFloatsArray[i].m_GraphValueLengh).ToString(), TextAnchor.LowerLeft, OriginPosition + new Vector3(2.0f, 2.0f, 0.0f), Quaternion.identity, Color.white * new Color(1.0f, 1.0f, 1.0f, TextAlpha), 0.0f, true);
+
+            // Draw bg points
+            GL.TexCoord2(0.0f,0.0f);
+            GL.Vertex(OriginPosition);
+
+            GL.TexCoord2(0.0f, 1.0f);
+            GL.Vertex(OriginPosition + new Vector3(0.0f, GraphHeight, 0.0f));
+
+            GL.TexCoord2(1.0f, 1.0f);
+            GL.Vertex(OriginPosition + new Vector3(GraphWidth, GraphHeight, 0.0f));
+
+            GL.TexCoord2(1.0f, 0.0f);
+            GL.Vertex(OriginPosition + new Vector3(GraphWidth, 0.0f, 0.0f));
+        }
+
+        GL.End();
+        
+        // Draw lines to show float value
+        GL.Begin(GL.LINES);
+
+        float GraphStepX;
+        float GraphStepY;
+        float OffsetY;
+
+        for (int i = 0; i < DebugFloatsArray.Length; i++)
+        {
+            GraphStepX = GraphWidth / DebugFloatsArray[i].m_SamplesCount;
+            GraphStepY = (GraphHeight / 2.0f) / DebugFloatsArray[i].m_GraphValueLengh;
+
+            OffsetY = GraphHeight / 2.0f;
+            
+            // Draw line in the half of the graph = 0
+            GL.Color(new Color(0.3f, 1.0f, 0.2f, 0.2f));
+
+            GL.Vertex(new Vector3(OriginPosition.x, OriginPosition.y + GraphHeight / 2.0f));
+            GL.Vertex(new Vector3(OriginPosition.x + GraphWidth, OriginPosition.y + GraphHeight / 2.0f));
+
+            // Draw curve
+            if (DrawDebugTools.Instance.m_DebugFloatsList[i].m_FloatValuesList.Count > 0)
+            {
+                GL.Color(new Color(1.0f, 1.0f, 0.2f, 0.9f));
+
+                Vector3     LineStart   = Vector3.zero;
+                Vector3     LineEnd     = Vector3.zero;
+                float       FloatValue  = 0.0f;
+                float X;
+                float Y;
+
+                for (int j = 0; j < DrawDebugTools.Instance.m_DebugFloatsList[i].m_FloatValuesList.Count; j++)
+                {                    
+                    if (j == 0)
+                    {
+                        FloatValue = DrawDebugTools.Instance.m_DebugFloatsList[i].m_FloatValuesList[j];
+                        LineStart = OriginPosition + new Vector3(0.0f, Mathf.Clamp(OffsetY + FloatValue * GraphStepY, OriginPosition.y, OriginPosition.y + GraphHeight), 0.0f);
+                    }
+
+                    if (j < DrawDebugTools.Instance.m_DebugFloatsList[i].m_FloatValuesList.Count - 1)
+                        FloatValue = DrawDebugTools.Instance.m_DebugFloatsList[i].m_FloatValuesList[j + 1];
+
+                    X = (j + 1) * GraphStepX;
+                    Y = Mathf.Clamp(OffsetY + FloatValue * GraphStepY, OriginPosition.y, OriginPosition.y + GraphHeight);
+                    LineEnd = OriginPosition + new Vector3(X, Y, 0.0f);
+
+                    GL.Vertex(LineStart);
+                    GL.Vertex(LineEnd);
+
+                    LineStart = LineEnd;
+                }
+
+                // draw value text
+                AddDebugText((FloatValue).ToString(".000"), FloatValue >= 0.0f ? TextAnchor.UpperRight : TextAnchor.LowerRight, new Vector3(OriginPosition.x + GraphWidth, Mathf.Clamp(LineEnd.y, OriginPosition.y, OriginPosition.y + GraphHeight), 0.0f), Quaternion.identity, Color.white * new Color(1.0f, 1.0f, 1.0f, 1.0f), 0.0f, true);
+            }
+        }
+        GL.End();
+        GL.PopMatrix();
+    }
+    public float YValueMultipliers = 1.0f;
     public static void FlushDebugLines()
     {
         // Delete all lines
@@ -889,7 +994,126 @@ public class DrawDebugTools : MonoBehaviour
     }
 }
 
+//*********************************//
+// Structures | Enums              //
+//*********************************//
+
+public class BatchedLine
+{
+    public Vector3 Start;
+    public Vector3 End;
+    public Vector3 PivotPoint;
+    public Quaternion Rotation;
+    public Color Color;
+    public float RemainLifeTime;
+
+    public BatchedLine(Vector3 InStart, Vector3 InEnd, Vector3 InPivotPoint, Quaternion InRotation, Color InColor, float InRemainLifeTime)
+    {
+        Start = InStart;
+        End = InEnd;
+        PivotPoint = InPivotPoint;
+        Rotation = InRotation;
+        Color = InColor;
+        RemainLifeTime = InRemainLifeTime;
+    }
+};
+
+public enum EDrawPlaneAxis
+{
+    XZ,
+    XY,
+    YZ
+};
+
 [System.Serializable]
+public class DebugFloat
+{
+    public string           m_UniqueFloatName = "";
+    public int              m_SamplesCount = 0;
+    public List<float>      m_FloatValuesList;
+    public float            m_GraphValueLengh;
+    public float            m_MinValue;
+    public float            m_MaxValue;
+    public bool             m_AutoAdjustMinMaxRange = false;
+
+    public DebugFloat()
+    {
+    }
+
+    public DebugFloat(string UniqueFloatName, int SamplesCount, float GraphValueLengh, bool AutoAdjustMinMaxRange)
+    {
+        m_UniqueFloatName           = UniqueFloatName;
+        m_SamplesCount              = SamplesCount;
+        m_FloatValuesList           = new List<float>();
+        m_GraphValueLengh           = GraphValueLengh;
+        m_AutoAdjustMinMaxRange     = AutoAdjustMinMaxRange;
+    }
+
+    public void AddValue(float NewFloatVal)
+    {
+        // Add value
+        m_FloatValuesList.Add(NewFloatVal);
+
+        // Set min and max
+        if (Mathf.Abs(GetMaximumValue()) > Mathf.Abs(GetMinimumValue()))
+        {
+            m_MaxValue = Mathf.Abs(GetMaximumValue());
+            m_MinValue = -Mathf.Abs(GetMaximumValue());
+        }
+        else
+        {
+            m_MaxValue = Mathf.Abs(GetMinimumValue());
+            m_MinValue = -Mathf.Abs(GetMinimumValue());
+        }
+
+        // Auto adjust graph length
+        if (m_AutoAdjustMinMaxRange)
+        {
+            if (Mathf.Abs(NewFloatVal) > m_GraphValueLengh)
+            {
+                m_GraphValueLengh = Mathf.Abs(NewFloatVal);
+            }
+        }
+
+        // Remove first float from the array if we rech max samples
+        if (GetDidReachMaxSamples())
+            m_FloatValuesList.RemoveAt(0);
+    }
+
+    public bool GetDidReachMaxSamples()
+    {
+        return m_FloatValuesList.Count > m_SamplesCount;
+    }
+
+    public float GetMinimumValue()
+    {
+        float SmallestValue = Mathf.Infinity;
+        for (int i = 0; i < m_FloatValuesList.Count; i++)
+        {
+            if (m_FloatValuesList[i] < SmallestValue)
+            {
+                SmallestValue = m_FloatValuesList[i];
+            }
+        }
+        return SmallestValue;
+    }
+
+    public float GetMaximumValue()
+    {
+        float BiggestValue = -Mathf.Infinity;
+        for (int i = 0; i < m_FloatValuesList.Count; i++)
+        {
+            if (m_FloatValuesList[i] > BiggestValue)
+            {
+                BiggestValue = m_FloatValuesList[i];
+            }
+        }
+        return BiggestValue;
+    }
+
+
+}
+
 public class DebugText
 {
     public string                   m_TextString;
