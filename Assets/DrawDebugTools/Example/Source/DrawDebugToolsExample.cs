@@ -80,11 +80,13 @@ public class DrawDebugToolsExample : MonoBehaviour {
         DrawDebugTools.DrawString3D(new Vector3(0.0f, 30.0f, 0.0f), Quaternion.Euler(Rot), "HELLO TEXT WORLD", anchof, Color.green, 0.0f);
 
         // Draw float debug
-        if (SinValue > 0.0f) SinValue *= 2.0f;
         if (Input.GetKey(KeyCode.W)) m += 500.0f * Time.deltaTime;
         if (Input.GetKey(KeyCode.S)) m -= 500.0f * Time.deltaTime;
-        if (Mathf.Abs(m) > 100.0f)
-            DrawDebugTools.DrawFloatGraph("Moving Sphere: Z Value", m, 1000.0f, false, FloatSamplesCount);
+
+        print("SinValue = "+ SinValue);
+        DrawDebugTools.DrawFloatGraph("Sin Value * 2", SinValue * 2.0f, 6.0f, true, FloatSamplesCount);
+        DrawDebugTools.DrawFloatGraph("Sin Value", SinValue, 6.0f, false, FloatSamplesCount);
+        DrawDebugTools.DrawFloatGraph("m Value", m, 1000.0f, false, FloatSamplesCount);
     }
 
     float m = 0.0f;

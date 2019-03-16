@@ -676,10 +676,11 @@ public class DrawDebugTools : MonoBehaviour
         DrawDebugTools.Instance.m_DebugTextesList.Add(new DebugText(Text, Anchor, Position, Rotation, Color, LifeTime, Is2DText));
     }
 
-    public static void DrawFloatGraph(string UniqueGraphName, float FloatValueToDebug, float GraphHalfMinMaxRange = 100.0f, bool AutoAdjustMinMaxRange = false, int SamplesCount = 50, float LifeTime = 0.0f)
+    public static void DrawFloatGraph(string UniqueGraphName, float FloatValueToDebug, float GraphHalfMinMaxRange = 100.0f, bool AutoAdjustMinMaxRange = false, int SamplesCount = 50)
     {
-        bool IsFloatAlreadyExists = false;
-        int FloatIndex = -1;
+        bool    IsFloatAlreadyExists = false;
+        int     FloatIndex = -1;
+        float   TimeBeforeRemoveInactiveGraph = 2.0f;
 
         for (int i = 0; i < DrawDebugTools.Instance.m_DebugFloatsList.Count; i++)
         {
@@ -696,7 +697,7 @@ public class DrawDebugTools : MonoBehaviour
         }
         else
         {
-            Instance.m_DebugFloatsList.Add(new DebugFloat(UniqueGraphName, SamplesCount, GraphHalfMinMaxRange, AutoAdjustMinMaxRange));
+            Instance.m_DebugFloatsList.Add(new DebugFloat(UniqueGraphName, SamplesCount, GraphHalfMinMaxRange, AutoAdjustMinMaxRange, TimeBeforeRemoveInactiveGraph));
         }
     }
 
@@ -865,8 +866,7 @@ public class DrawDebugTools : MonoBehaviour
         }
         GL.End();
         GL.PopMatrix();
-
-        
+                
         // Update text life time
         for (int i = m_DebugTextesList.Count - 1; i >= 0; i--)
         {
@@ -884,9 +884,11 @@ public class DrawDebugTools : MonoBehaviour
         float           GraphHeight = 100.0f;
         float           GrpahMargin_Right = 5.0f;
         float           GrpahMargin_Buttom = 5.0f;
+        float           GrpahMargin_Top = 20;
         Vector3         OriginPosition = Vector3.zero;
         DebugFloat[]    DebugFloatsArray = DrawDebugTools.Instance.m_DebugFloatsList.ToArray();
         float           TextAlpha = 0.5f;
+        //float 
 
         // Draw background
         GL.PushMatrix();
@@ -898,7 +900,7 @@ public class DrawDebugTools : MonoBehaviour
         for (int i = 0; i < DebugFloatsArray.Length; i++)
         {
             // Set origin position
-            OriginPosition = new Vector3(Screen.width - GraphWidth - GrpahMargin_Right, GrpahMargin_Buttom);
+            OriginPosition = new Vector3(Screen.width - GraphWidth - GrpahMargin_Right, GrpahMargin_Buttom + (GraphHeight + GrpahMargin_Top) * i);
 
             // Draw text
             float TextButtomMargin = 5.0f;
@@ -933,11 +935,13 @@ public class DrawDebugTools : MonoBehaviour
 
         for (int i = 0; i < DebugFloatsArray.Length; i++)
         {
+            OriginPosition = new Vector3(Screen.width - GraphWidth - GrpahMargin_Right, GrpahMargin_Buttom + (GraphHeight + GrpahMargin_Top) * i);
+            
             GraphStepX = GraphWidth / DebugFloatsArray[i].m_SamplesCount;
             GraphStepY = (GraphHeight / 2.0f) / DebugFloatsArray[i].m_GraphValueLengh;
 
-            OffsetY = GraphHeight / 2.0f;
-            
+            OffsetY = (GraphHeight / 2.0f);
+
             // Draw line in the half of the graph = 0
             GL.Color(new Color(0.3f, 1.0f, 0.2f, 0.2f));
 
@@ -960,14 +964,15 @@ public class DrawDebugTools : MonoBehaviour
                     if (j == 0)
                     {
                         FloatValue = DrawDebugTools.Instance.m_DebugFloatsList[i].m_FloatValuesList[j];
-                        LineStart = OriginPosition + new Vector3(0.0f, Mathf.Clamp(OffsetY + FloatValue * GraphStepY, OriginPosition.y, OriginPosition.y + GraphHeight), 0.0f);
+                        LineStart = OriginPosition + new Vector3(0.0f, Mathf.Clamp(OffsetY + FloatValue * GraphStepY, GrpahMargin_Buttom, GraphHeight), 0.0f);
                     }
 
                     if (j < DrawDebugTools.Instance.m_DebugFloatsList[i].m_FloatValuesList.Count - 1)
                         FloatValue = DrawDebugTools.Instance.m_DebugFloatsList[i].m_FloatValuesList[j + 1];
 
                     X = (j + 1) * GraphStepX;
-                    Y = Mathf.Clamp(OffsetY + FloatValue * GraphStepY, OriginPosition.y, OriginPosition.y + GraphHeight);
+                    Y = Mathf.Clamp(OffsetY + FloatValue * GraphStepY, GrpahMargin_Buttom, GraphHeight);
+
                     LineEnd = OriginPosition + new Vector3(X, Y, 0.0f);
 
                     GL.Vertex(LineStart);
@@ -982,6 +987,16 @@ public class DrawDebugTools : MonoBehaviour
         }
         GL.End();
         GL.PopMatrix();
+          
+        // Update text life time
+        for (int i = m_DebugFloatsList.Count - 1; i >= 0; i--)
+        {
+            m_DebugFloatsList[i].m_TimeBeforeRemoveCounter += Time.deltaTime;
+            if (m_DebugFloatsList[i].m_TimeBeforeRemoveCounter >= m_DebugFloatsList[i].m_TimeBeforeRemove)
+            {
+                m_DebugFloatsList.RemoveAt(i);
+            }
+        }
     }
     public float YValueMultipliers = 1.0f;
     public static void FlushDebugLines()
@@ -1035,18 +1050,21 @@ public class DebugFloat
     public float            m_MinValue;
     public float            m_MaxValue;
     public bool             m_AutoAdjustMinMaxRange = false;
+    public float            m_TimeBeforeRemove;
+    public float            m_TimeBeforeRemoveCounter = 0.0f;
 
     public DebugFloat()
     {
     }
 
-    public DebugFloat(string UniqueFloatName, int SamplesCount, float GraphValueLengh, bool AutoAdjustMinMaxRange)
+    public DebugFloat(string UniqueFloatName, int SamplesCount, float GraphValueLengh, bool AutoAdjustMinMaxRange, float TimeBeforeRemove)
     {
         m_UniqueFloatName           = UniqueFloatName;
         m_SamplesCount              = SamplesCount;
         m_FloatValuesList           = new List<float>();
         m_GraphValueLengh           = GraphValueLengh;
         m_AutoAdjustMinMaxRange     = AutoAdjustMinMaxRange;
+        m_TimeBeforeRemove          = TimeBeforeRemove;
     }
 
     public void AddValue(float NewFloatVal)
@@ -1078,6 +1096,9 @@ public class DebugFloat
         // Remove first float from the array if we rech max samples
         if (GetDidReachMaxSamples())
             m_FloatValuesList.RemoveAt(0);
+
+        // Reset counter
+        m_TimeBeforeRemoveCounter = 0.0f;
     }
 
     public bool GetDidReachMaxSamples()
