@@ -77,7 +77,7 @@ public class DrawDebugToolsExample : MonoBehaviour {
             RotationText = Quaternion.LookRotation((new Vector3(0.0f, 30.0f, 0.0f) - Camera.main.transform.position).normalized);
             
         }
-        //DrawDebugTools.DrawString3D(new Vector3(0.0f, 0.0f, 0.0f), Quaternion.Euler(Rot), "HELLO TEXT WORLD", anchof, Color.green, 0.0f);
+        DrawDebugTools.DrawString3D(new Vector3(0.0f, 0.0f, 0.0f), Quaternion.Euler(Rot), "HELLO TEXT WORLD", anchof, Color.green, 0.01f, 0.0f);
 
         // Draw float debug
         if (Input.GetKey(KeyCode.W)) m += 500.0f * Time.deltaTime;
