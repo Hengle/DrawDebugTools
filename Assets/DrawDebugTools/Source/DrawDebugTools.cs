@@ -21,7 +21,7 @@ public class DrawDebugTools : MonoBehaviour
     private List<BatchedLine>           m_BatchedLines;
 
     // Materials
-    private Material                    m_LineMaterial;
+    private Material                     m_LineMaterial;
     private Material                    m_AlphaMaterial;
 
     // Text
@@ -283,6 +283,17 @@ public class DrawDebugTools : MonoBehaviour
         {
             Shader shader = Shader.Find("Hidden/Internal-Colored");
             m_LineMaterial = new Material(shader);
+            m_LineMaterial.hideFlags = HideFlags.HideAndDontSave;
+            
+            //Turn on alpha blending
+            m_LineMaterial.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            m_LineMaterial.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            
+            //Turn backface culling off
+            m_LineMaterial.SetInt("_Cull", (int)UnityEngine.Rendering.CullMode.Off);
+            
+            //Turn off depth writes
+            m_LineMaterial.SetInt("_ZWrite", 0);
 
             Shader shader3 = Shader.Find("Hidden/Internal-GUITexture");
             m_AlphaMaterial = new Material(shader3);
