@@ -39,7 +39,7 @@ public class DrawDebugTools : MonoBehaviour
     private Vector2                     m_DebugCameraMovSpeedMultiplierRange = new Vector2(0.05f, 10.0f);
 
     // Debug float 
-    public List<DebugFloat>            m_DebugFloatsList;
+    public List<DebugFloatGraph>            m_FloatGraphsList;
 
     //*********************************//
     // Functions                       //
@@ -62,7 +62,7 @@ public class DrawDebugTools : MonoBehaviour
         m_Debug2DTextFont = Font.CreateDynamicFontFromOSFont(FontName, 12);
         m_Debug2DTextFont.RequestCharactersInTexture(" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~", 12, FontStyle.Normal);
 
-        m_Debug3DTextFont = Font.CreateDynamicFontFromOSFont(FontName, 20);
+        m_Debug3DTextFont = Font.CreateDynamicFontFromOSFont(FontName, 32);                
         m_Debug3DTextFont.RequestCharactersInTexture(" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~", 32, FontStyle.Normal);
 
     }
@@ -72,7 +72,7 @@ public class DrawDebugTools : MonoBehaviour
         yield return new WaitForEndOfFrame();
         HandleDrawingListOfLines();
         HandleDrawingListOfTextes();
-        HandleDrawingListOfFloatDebugs();
+        HandleDrawingListOfFloatGraphs();
     }
 
     private void Update()
@@ -296,6 +296,11 @@ public class DrawDebugTools : MonoBehaviour
            //  Turn off depth writes
            // m_AlphaMaterial.SetInt("_ZWrite", 0);
         }
+    }
+
+    public static void DrawSphere(Vector3 Center, float Radius, int Segments, Color Color, float LifeTime = 0.0f)
+    {
+        DrawSphere(Center, Quaternion.identity, Radius, Segments, Color, LifeTime = 0.0f);
     }
 
     public static void DrawSphere(Vector3 Center, Quaternion Rotation, float Radius, int Segments, Color Color, float LifeTime = 0.0f)
@@ -577,17 +582,15 @@ public class DrawDebugTools : MonoBehaviour
         DrawLine(CurrentPoint, FirstPoint, Color, LifeTime);
     }
 
-    public static void DrawString2D(Vector2 Position, string Text, TextAnchor Anchor, Color  TextColor, float LifeTime = 0.0f, bool EnableShadow = true)
+    public static void DrawString2D(Vector2 Position, string Text, TextAnchor Anchor, Color  TextColor, float LifeTime = 0.0f)
     {
-        if (EnableShadow)
-            AddDebugText(Text, Anchor, Position - new Vector2(0.0f, 1.0f), Quaternion.identity, Color.black, LifeTime, true);
-        AddDebugText(Text, Anchor, Position, Quaternion.identity, TextColor, LifeTime, true);        
+        AddDebugText(Text, Anchor, Position - new Vector2(0.0f, 1.0f), Quaternion.identity, Color.black, 1.0f, LifeTime, true);
+        AddDebugText(Text, Anchor, Position, Quaternion.identity, TextColor, 1.0f, LifeTime, true);        
     }
 
-    public static void DrawString3D(Vector3 Position, Quaternion Rotation, string Text, TextAnchor Anchor, Color TextColor, float LifeTime = 0.0f)
+    public static void DrawString3D(Vector3 Position, Quaternion Rotation, string Text, TextAnchor Anchor, Color TextColor, float TextSize = 1.0f, float LifeTime = 0.0f)
     {
-        //Rotation = Quaternion.Euler(-Rotation.eulerAngles);
-        AddDebugText(Text, Anchor, Position, Rotation, TextColor, LifeTime, false);
+        AddDebugText(Text, Anchor, Position, Rotation, TextColor, TextSize, LifeTime, false);
     }
 
     public static void DrawFrustum(Camera Camera, Color Color, float LifeTime = 0.0f)
@@ -671,9 +674,25 @@ public class DrawDebugTools : MonoBehaviour
 
     public static void DrawGrid(Vector3 Position) { }
 
-    private static void AddDebugText(string Text, TextAnchor Anchor, Vector3 Position, Quaternion Rotation,  Color Color, float LifeTime, bool Is2DText)
+    public static void DrawDistance(Vector3 Start, Vector3 End, Color Color, float LifeTime = 0.0f)
     {
-        DrawDebugTools.Instance.m_DebugTextesList.Add(new DebugText(Text, Anchor, Position, Rotation, Color, LifeTime, Is2DText));
+        float Dist = Vector3.Distance(Start, End);
+        Vector3 DistTextPos = (Start + End) / 2.0f;
+        float DistEndSize = 0.3f;
+        InternalDrawLine(Start, End, DistTextPos, Quaternion.identity, Color, LifeTime);
+
+        Vector3 DistDir = (End - Start).normalized;
+        Vector3 RightDir = Vector3.Cross(DistDir, Vector3.up);
+
+        InternalDrawLine(Start - RightDir * DistEndSize, Start + RightDir * DistEndSize, DistTextPos, Quaternion.identity, Color, LifeTime);
+        InternalDrawLine(End - RightDir * DistEndSize, End + RightDir * DistEndSize, DistTextPos, Quaternion.identity, Color, LifeTime);
+
+        DrawDebugTools.DrawString3D(DistTextPos, Quaternion.LookRotation(Camera.main.transform.position - DistTextPos), Dist.ToString(".00"), TextAnchor.MiddleCenter, Color.white, 0.01f, LifeTime);
+    }
+
+    private static void AddDebugText(string Text, TextAnchor Anchor, Vector3 Position, Quaternion Rotation,  Color Color, float Size, float LifeTime, bool Is2DText)
+    {
+        DrawDebugTools.Instance.m_DebugTextesList.Add(new DebugText(Text, Anchor, Position, Rotation, Color, Size, LifeTime, Is2DText));
     }
 
     public static void DrawFloatGraph(string UniqueGraphName, float FloatValueToDebug, float GraphHalfMinMaxRange = 100.0f, bool AutoAdjustMinMaxRange = false, int SamplesCount = 50)
@@ -682,9 +701,9 @@ public class DrawDebugTools : MonoBehaviour
         int     FloatIndex = -1;
         float   TimeBeforeRemoveInactiveGraph = 2.0f;
 
-        for (int i = 0; i < DrawDebugTools.Instance.m_DebugFloatsList.Count; i++)
+        for (int i = 0; i < DrawDebugTools.Instance.m_FloatGraphsList.Count; i++)
         {
-            if (Instance.m_DebugFloatsList[i].m_UniqueFloatName == UniqueGraphName)
+            if (Instance.m_FloatGraphsList[i].m_UniqueFloatName == UniqueGraphName)
             {
                 IsFloatAlreadyExists = true;
                 FloatIndex = i;
@@ -693,15 +712,13 @@ public class DrawDebugTools : MonoBehaviour
 
         if (IsFloatAlreadyExists)
         {
-            Instance.m_DebugFloatsList[FloatIndex].AddValue(FloatValueToDebug);
+            Instance.m_FloatGraphsList[FloatIndex].AddValue(FloatValueToDebug);
         }
         else
         {
-            Instance.m_DebugFloatsList.Add(new DebugFloat(UniqueGraphName, SamplesCount, GraphHalfMinMaxRange, AutoAdjustMinMaxRange, TimeBeforeRemoveInactiveGraph));
+            Instance.m_FloatGraphsList.Add(new DebugFloatGraph(UniqueGraphName, SamplesCount, GraphHalfMinMaxRange, AutoAdjustMinMaxRange, TimeBeforeRemoveInactiveGraph));
         }
     }
-
-    //public static void  DrawDebugFloatHistory(FDebugFloatHistory const & FloatHistory, Vector3 const & DrawLocation, Vector32D const & DrawSize, FColor const & DrawColor, bool const & bPersistent = false, float const & LifeTime = 0.0f, uint8 const & DepthPriority = 0) { }
 
     private static Vector3 GetIntersectionPointOfPlanes(Plane Plane_1, Plane Plane_2, Plane Plane_3)
     {
@@ -773,7 +790,6 @@ public class DrawDebugTools : MonoBehaviour
             if (m_DebugTextesList[i].m_Is2DText)
             {
                 DebugText2DList.Add(m_DebugTextesList[i]);
-
             }
             else
             {
@@ -786,15 +802,15 @@ public class DrawDebugTools : MonoBehaviour
         m_Debug3DTextFont.material.SetPass(0);
         GL.Begin(GL.QUADS);
         Vector3 V_1, V_2, V_3, V_4;
+
         for (int i = 0; i < DebugText3DList.Count; i++)
         {
-            Matrix4x4 M = Matrix4x4.identity;
-            M = Camera.current.projectionMatrix;
-            M.SetTRS(Vector3.zero, DebugText3DList[i].m_TextRotation, Vector3.one);
-
             GL.Color(DebugText3DList[i].m_TextColor);
             Vector3 OriginPosition = DebugText3DList[i].GetTextOriginPosition(m_Debug3DTextFont);
-            DrawBox(DebugText3DList[i].m_TextPosition, Quaternion.identity, Vector3.one * 2f, Color.red);
+            float Size = DebugText3DList[i].m_Size;
+            Matrix4x4 M = Matrix4x4.identity;            
+            M.SetTRS(Vector3.zero, DebugText3DList[i].m_TextRotation, Vector3.one);            
+            Vector3 CharPos = OriginPosition;
             for (int j = 0; j < DebugText3DList[i].m_TextString.Length; j++)
             {
                 char Char = DebugText3DList[i].m_TextString.ToCharArray()[j];
@@ -802,15 +818,25 @@ public class DrawDebugTools : MonoBehaviour
                 CharacterInfo CharInfos;
                 m_Debug3DTextFont.GetCharacterInfo(Char, out CharInfos);
 
-                V_1 = OriginPosition + new Vector3(CharInfos.minX, CharInfos.minY, 0.0f);
-                V_2 = OriginPosition + new Vector3(CharInfos.minX, CharInfos.maxY, 0.0f);
-                V_3 = OriginPosition + new Vector3(CharInfos.maxX, CharInfos.maxY, 0.0f);
-                V_4 = OriginPosition + new Vector3(CharInfos.maxX, CharInfos.minY, 0.0f);
+                V_1 = CharPos - new Vector3(CharInfos.minX, CharInfos.minY, 0.0f) * Size;
+                V_2 = CharPos + new Vector3(CharInfos.minX, CharInfos.maxY, 0.0f) * Size;
+                V_3 = CharPos + new Vector3(-CharInfos.maxX, CharInfos.maxY, 0.0f) * Size;
+                V_4 = CharPos + new Vector3(-CharInfos.maxX, CharInfos.minY, 0.0f) * Size;
+
+                V_1 -= DebugText3DList[i].m_TextPosition;
+                V_2 -= DebugText3DList[i].m_TextPosition;
+                V_3 -= DebugText3DList[i].m_TextPosition;
+                V_4 -= DebugText3DList[i].m_TextPosition;
 
                 V_1 = M.MultiplyPoint(V_1);
                 V_2 = M.MultiplyPoint(V_2);
                 V_3 = M.MultiplyPoint(V_3);
                 V_4 = M.MultiplyPoint(V_4);
+
+                V_1 += DebugText3DList[i].m_TextPosition;
+                V_2 += DebugText3DList[i].m_TextPosition;
+                V_3 += DebugText3DList[i].m_TextPosition;
+                V_4 += DebugText3DList[i].m_TextPosition;
 
                 GL.TexCoord(CharInfos.uvBottomLeft);
                 GL.Vertex(V_1);
@@ -823,7 +849,8 @@ public class DrawDebugTools : MonoBehaviour
 
                 GL.TexCoord(CharInfos.uvBottomRight);
                 GL.Vertex(V_4);
-                OriginPosition += new Vector3(CharInfos.advance, 0.0f, 0.0f);
+
+                CharPos -= new Vector3(CharInfos.advance * Size, 0.0f, 0.0f);
             }
 
         }
@@ -878,17 +905,16 @@ public class DrawDebugTools : MonoBehaviour
         }
     }
 
-    private void HandleDrawingListOfFloatDebugs()
+    private void HandleDrawingListOfFloatGraphs()
     {
-        float           GraphWidth = 300.0f;
-        float           GraphHeight = 100.0f;
-        float           GrpahMargin_Right = 5.0f;
-        float           GrpahMargin_Buttom = 5.0f;
-        float           GrpahMargin_Top = 20;
-        Vector3         OriginPosition = Vector3.zero;
-        DebugFloat[]    DebugFloatsArray = DrawDebugTools.Instance.m_DebugFloatsList.ToArray();
-        float           TextAlpha = 0.5f;
-        //float 
+        float               GraphWidth = 300.0f;
+        float               GraphHeight = 100.0f;
+        float               GraphMargin_Right = 5.0f;
+        float               GraphMargin_Buttom = 5.0f;
+        float               GraphMargin_Top = 20;
+        Vector3             OriginPosition = Vector3.zero;
+        DebugFloatGraph[]   FloatGraphsArray = DrawDebugTools.Instance.m_FloatGraphsList.ToArray();
+        float               TextAlpha = 0.5f;
 
         // Draw background
         GL.PushMatrix();
@@ -896,19 +922,31 @@ public class DrawDebugTools : MonoBehaviour
         m_AlphaMaterial.SetPass(0);
         GL.Color(new Color(0.3f, 1.0f, 0.2f, 0.1f));
         GL.LoadPixelMatrix();
-        
-        for (int i = 0; i < DebugFloatsArray.Length; i++)
+
+        int GraphPosIndexX = 1;
+        int GraphPosIndexY = 0;
+        for (int i = 0; i < FloatGraphsArray.Length; i++)
         {
             // Set origin position
-            OriginPosition = new Vector3(Screen.width - GraphWidth - GrpahMargin_Right, GrpahMargin_Buttom + (GraphHeight + GrpahMargin_Top) * i);
+            float TargetPosY = (GraphMargin_Buttom + GraphHeight + GraphMargin_Top) * GraphPosIndexY;            
+            if (TargetPosY > Screen.height - (GraphHeight + GraphMargin_Buttom))
+            {
+                GraphPosIndexX++;
+                GraphPosIndexY = 0;
+            }
+            OriginPosition = new Vector3(Screen.width - (GraphWidth + GraphMargin_Right) * GraphPosIndexX, GraphMargin_Buttom + (GraphHeight + GraphMargin_Top) * GraphPosIndexY);
+            GraphPosIndexY++;
 
             // Draw text
             float TextButtomMargin = 5.0f;
+
             // Draw graph title
-            AddDebugText(DebugFloatsArray[i].m_UniqueFloatName, TextAnchor.LowerLeft, OriginPosition + new Vector3(0.0f, GraphHeight+ TextButtomMargin, 0.0f), Quaternion.identity, Color.white, 0.0f, true);
+            DrawString2D(OriginPosition + new Vector3(0.0f, GraphHeight + TextButtomMargin, 0.0f), FloatGraphsArray[i].m_UniqueFloatName, TextAnchor.LowerLeft, Color.white, 0.0f);
+
             // Draw min and max values
-            AddDebugText(DebugFloatsArray[i].m_GraphValueLengh.ToString(), TextAnchor.UpperLeft, OriginPosition + new Vector3(2.0f, GraphHeight, 0.0f), Quaternion.identity, Color.white * new Color(1.0f, 1.0f, 1.0f, TextAlpha), 0.0f, true);
-            AddDebugText((-DebugFloatsArray[i].m_GraphValueLengh).ToString(), TextAnchor.LowerLeft, OriginPosition + new Vector3(2.0f, 2.0f, 0.0f), Quaternion.identity, Color.white * new Color(1.0f, 1.0f, 1.0f, TextAlpha), 0.0f, true);
+            AddDebugText(FloatGraphsArray[i].m_GraphValueLengh.ToString(), TextAnchor.UpperLeft, OriginPosition + new Vector3(2.0f, GraphHeight, 0.0f), Quaternion.identity, Color.white * new Color(1.0f, 1.0f, 1.0f, TextAlpha), 1.0f, 0.0f, true);
+            AddDebugText((-FloatGraphsArray[i].m_GraphValueLengh).ToString(), TextAnchor.LowerLeft, OriginPosition + new Vector3(2.0f, 2.0f, 0.0f), Quaternion.identity, Color.white * new Color(1.0f, 1.0f, 1.0f, TextAlpha), 1.0f, 0.0f, true);
+
 
             // Draw bg points
             GL.TexCoord2(0.0f,0.0f);
@@ -933,12 +971,22 @@ public class DrawDebugTools : MonoBehaviour
         float GraphStepY;
         float OffsetY;
 
-        for (int i = 0; i < DebugFloatsArray.Length; i++)
+        GraphPosIndexX = 1;
+        GraphPosIndexY = 0;
+        for (int i = 0; i < FloatGraphsArray.Length; i++)
         {
-            OriginPosition = new Vector3(Screen.width - GraphWidth - GrpahMargin_Right, GrpahMargin_Buttom + (GraphHeight + GrpahMargin_Top) * i);
-            
-            GraphStepX = GraphWidth / DebugFloatsArray[i].m_SamplesCount;
-            GraphStepY = (GraphHeight / 2.0f) / DebugFloatsArray[i].m_GraphValueLengh;
+            // Set origin position
+            float TargetPosY = (GraphMargin_Buttom + GraphHeight + GraphMargin_Top) * GraphPosIndexY;
+            if (TargetPosY > Screen.height - (GraphHeight + GraphMargin_Buttom))
+            {
+                GraphPosIndexX++;
+                GraphPosIndexY = 0;
+            }
+            OriginPosition = new Vector3(Screen.width - (GraphWidth + GraphMargin_Right) * GraphPosIndexX, GraphMargin_Buttom + (GraphHeight + GraphMargin_Top) * GraphPosIndexY);
+            GraphPosIndexY++;
+
+            GraphStepX = GraphWidth / FloatGraphsArray[i].m_SamplesCount;
+            GraphStepY = (GraphHeight / 2.0f) / FloatGraphsArray[i].m_GraphValueLengh;
 
             OffsetY = (GraphHeight / 2.0f);
 
@@ -949,7 +997,7 @@ public class DrawDebugTools : MonoBehaviour
             GL.Vertex(new Vector3(OriginPosition.x + GraphWidth, OriginPosition.y + GraphHeight / 2.0f));
 
             // Draw curve
-            if (DrawDebugTools.Instance.m_DebugFloatsList[i].m_FloatValuesList.Count > 0)
+            if (DrawDebugTools.Instance.m_FloatGraphsList[i].m_FloatValuesList.Count > 0)
             {
                 GL.Color(new Color(1.0f, 1.0f, 0.2f, 0.9f));
 
@@ -959,19 +1007,19 @@ public class DrawDebugTools : MonoBehaviour
                 float X;
                 float Y;
 
-                for (int j = 0; j < DrawDebugTools.Instance.m_DebugFloatsList[i].m_FloatValuesList.Count; j++)
+                for (int j = 0; j < DrawDebugTools.Instance.m_FloatGraphsList[i].m_FloatValuesList.Count; j++)
                 {                    
                     if (j == 0)
                     {
-                        FloatValue = DrawDebugTools.Instance.m_DebugFloatsList[i].m_FloatValuesList[j];
-                        LineStart = OriginPosition + new Vector3(0.0f, Mathf.Clamp(OffsetY + FloatValue * GraphStepY, GrpahMargin_Buttom, GraphHeight), 0.0f);
+                        FloatValue = DrawDebugTools.Instance.m_FloatGraphsList[i].m_FloatValuesList[j];
+                        LineStart = OriginPosition + new Vector3(0.0f, Mathf.Clamp(OffsetY + FloatValue * GraphStepY, 0.0f, GraphHeight), 0.0f);
                     }
 
-                    if (j < DrawDebugTools.Instance.m_DebugFloatsList[i].m_FloatValuesList.Count - 1)
-                        FloatValue = DrawDebugTools.Instance.m_DebugFloatsList[i].m_FloatValuesList[j + 1];
+                    if (j < DrawDebugTools.Instance.m_FloatGraphsList[i].m_FloatValuesList.Count - 1)
+                        FloatValue = DrawDebugTools.Instance.m_FloatGraphsList[i].m_FloatValuesList[j + 1];
 
                     X = (j + 1) * GraphStepX;
-                    Y = Mathf.Clamp(OffsetY + FloatValue * GraphStepY, GrpahMargin_Buttom, GraphHeight);
+                    Y = Mathf.Clamp(OffsetY + FloatValue * GraphStepY, 0.0f, GraphHeight);
 
                     LineEnd = OriginPosition + new Vector3(X, Y, 0.0f);
 
@@ -982,23 +1030,23 @@ public class DrawDebugTools : MonoBehaviour
                 }
 
                 // draw value text
-                AddDebugText((FloatValue).ToString(".000"), FloatValue >= 0.0f ? TextAnchor.UpperRight : TextAnchor.LowerRight, new Vector3(OriginPosition.x + GraphWidth, Mathf.Clamp(LineEnd.y, OriginPosition.y, OriginPosition.y + GraphHeight), 0.0f), Quaternion.identity, Color.white * new Color(1.0f, 1.0f, 1.0f, 1.0f), 0.0f, true);
+                AddDebugText((FloatValue).ToString(".000"), FloatValue >= 0.0f ? TextAnchor.UpperRight : TextAnchor.LowerRight, new Vector3(OriginPosition.x + GraphWidth, Mathf.Clamp(LineEnd.y, OriginPosition.y, OriginPosition.y + GraphHeight), 0.0f), Quaternion.identity, Color.white * new Color(1.0f, 1.0f, 1.0f, 1.0f), 1.0f, 0.0f, true);
             }
         }
         GL.End();
         GL.PopMatrix();
           
         // Update text life time
-        for (int i = m_DebugFloatsList.Count - 1; i >= 0; i--)
+        for (int i = m_FloatGraphsList.Count - 1; i >= 0; i--)
         {
-            m_DebugFloatsList[i].m_TimeBeforeRemoveCounter += Time.deltaTime;
-            if (m_DebugFloatsList[i].m_TimeBeforeRemoveCounter >= m_DebugFloatsList[i].m_TimeBeforeRemove)
+            m_FloatGraphsList[i].m_TimeBeforeRemoveCounter += Time.deltaTime;
+            if (m_FloatGraphsList[i].m_TimeBeforeRemoveCounter >= m_FloatGraphsList[i].m_TimeBeforeRemove)
             {
-                m_DebugFloatsList.RemoveAt(i);
+                m_FloatGraphsList.RemoveAt(i);
             }
         }
     }
-    public float YValueMultipliers = 1.0f;
+
     public static void FlushDebugLines()
     {
         // Delete all lines
@@ -1041,7 +1089,7 @@ public enum EDrawPlaneAxis
 };
 
 [System.Serializable]
-public class DebugFloat
+public class DebugFloatGraph
 {
     public string           m_UniqueFloatName = "";
     public int              m_SamplesCount = 0;
@@ -1052,12 +1100,12 @@ public class DebugFloat
     public bool             m_AutoAdjustMinMaxRange = false;
     public float            m_TimeBeforeRemove;
     public float            m_TimeBeforeRemoveCounter = 0.0f;
-
-    public DebugFloat()
+    private int             m_Y, m_X;
+    public DebugFloatGraph()
     {
     }
 
-    public DebugFloat(string UniqueFloatName, int SamplesCount, float GraphValueLengh, bool AutoAdjustMinMaxRange, float TimeBeforeRemove)
+    public DebugFloatGraph(string UniqueFloatName, int SamplesCount, float GraphValueLengh, bool AutoAdjustMinMaxRange, float TimeBeforeRemove)
     {
         m_UniqueFloatName           = UniqueFloatName;
         m_SamplesCount              = SamplesCount;
@@ -1065,6 +1113,8 @@ public class DebugFloat
         m_GraphValueLengh           = GraphValueLengh;
         m_AutoAdjustMinMaxRange     = AutoAdjustMinMaxRange;
         m_TimeBeforeRemove          = TimeBeforeRemove;
+        m_Y = 0;
+        m_X = 1;
     }
 
     public void AddValue(float NewFloatVal)
@@ -1131,8 +1181,6 @@ public class DebugFloat
         }
         return BiggestValue;
     }
-
-
 }
 
 public class DebugText
@@ -1142,6 +1190,7 @@ public class DebugText
     public Vector3                  m_TextPosition;
     public Quaternion               m_TextRotation;
     public Color                    m_TextColor;
+    public float                    m_Size;
     public float                    m_RemainLifeTime;
     public bool                     m_Is2DText;
 
@@ -1149,13 +1198,14 @@ public class DebugText
     {
     }
 
-    public DebugText(string Text, TextAnchor TextAnchor, Vector3 TextPosition, Quaternion TextRotation, Color Color, float LifeTime, bool Is2DText)
+    public DebugText(string Text, TextAnchor TextAnchor, Vector3 TextPosition, Quaternion TextRotation, Color Color, float Size, float LifeTime, bool Is2DText)
     {
         m_TextString        = Text;
         m_TextAnchor        = TextAnchor;
         m_TextPosition      = TextPosition;
         m_TextRotation      = TextRotation;
         m_TextColor         = Color;
+        m_Size              = Size;
         m_RemainLifeTime    = LifeTime;
         m_Is2DText          = Is2DText;
     }
@@ -1174,9 +1224,9 @@ public class DebugText
         {
             CharacterInfo CharInfos;
             TextFont.GetCharacterInfo(CharsArray[i], out CharInfos);
-            TextWidth += CharInfos.advance;
+            TextWidth += CharInfos.advance * m_Size;
             if (i == 0)
-                TextHeight = CharInfos.glyphHeight;
+                TextHeight = CharInfos.glyphHeight * m_Size;
         }
 
         switch (m_TextAnchor)
@@ -1185,28 +1235,28 @@ public class DebugText
                 OriginPos += new Vector3(0.0f, -TextHeight, 0.0f);
                 break;
             case TextAnchor.UpperCenter:
-                OriginPos += new Vector3(-TextWidth / 2.0f, -TextHeight, 0.0f);
+                OriginPos += new Vector3(TextWidth / 2.0f, -TextHeight, 0.0f);
                 break;
             case TextAnchor.UpperRight:
-                OriginPos += new Vector3(-TextWidth, -TextHeight, 0.0f);
+                OriginPos += new Vector3(TextWidth, -TextHeight, 0.0f);
                 break;
             case TextAnchor.MiddleLeft:
                 OriginPos += new Vector3(0.0f, -TextHeight / 2.0f, 0.0f);
                 break;
             case TextAnchor.MiddleCenter:
-                OriginPos += new Vector3(-TextWidth / 2.0f, -TextHeight / 2.0f, 0.0f);
+                OriginPos += new Vector3(TextWidth / 2.0f, -TextHeight / 2.0f, 0.0f);
                 break;
             case TextAnchor.MiddleRight:
-                OriginPos += new Vector3(-TextWidth, -TextHeight / 2.0f, 0.0f);
+                OriginPos += new Vector3(TextWidth, -TextHeight / 2.0f, 0.0f);
                 break;
             case TextAnchor.LowerLeft:
                 // Default position
                 break;
             case TextAnchor.LowerCenter:
-                OriginPos += new Vector3(-TextWidth / 2.0f, 0.0f, 0.0f);
+                OriginPos += new Vector3(TextWidth / 2.0f, 0.0f, 0.0f);
                 break;
             case TextAnchor.LowerRight:
-                OriginPos += new Vector3(-TextWidth, 0.0f, 0.0f);
+                OriginPos += new Vector3(TextWidth, 0.0f, 0.0f);
                 break;
             default:
                 break;

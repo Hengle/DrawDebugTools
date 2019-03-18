@@ -12,11 +12,11 @@ public class DrawDebugToolsExample : MonoBehaviour {
 	private void Update () {
         // Draw moving sphere
         float SinValue = Mathf.Sin(Time.timeSinceLevelLoad *4.0f) * FloatMultiplier;
-        Vector3 Pos = new Vector3(0.0f, 0.0f, SinValue);
-        DrawDebugTools.DrawSphere(Pos, Quaternion.Euler(Rot), 2.0f, 8, Color.gray);
+        Vector3 MovingSpherePos = new Vector3(0.0f, 0.0f, SinValue);
+        DrawDebugTools.DrawSphere(MovingSpherePos, Quaternion.Euler(Rot), 2.0f, 8, Color.gray);
         if (Camera.main)
         {            
-            DrawDebugTools.DrawString2D(Camera.main.WorldToScreenPoint(Pos), Pos.ToString(), TextAnchor.UpperLeft, Color.cyan, 0.0f);
+            DrawDebugTools.DrawString2D(Camera.main.WorldToScreenPoint(MovingSpherePos), MovingSpherePos.ToString(), TextAnchor.UpperLeft, Color.cyan, 0.0f);
         }
 
         // Draw line
@@ -77,16 +77,22 @@ public class DrawDebugToolsExample : MonoBehaviour {
             RotationText = Quaternion.LookRotation((new Vector3(0.0f, 30.0f, 0.0f) - Camera.main.transform.position).normalized);
             
         }
-        DrawDebugTools.DrawString3D(new Vector3(0.0f, 30.0f, 0.0f), Quaternion.Euler(Rot), "HELLO TEXT WORLD", anchof, Color.green, 0.0f);
+        //DrawDebugTools.DrawString3D(new Vector3(0.0f, 0.0f, 0.0f), Quaternion.Euler(Rot), "HELLO TEXT WORLD", anchof, Color.green, 0.0f);
 
         // Draw float debug
         if (Input.GetKey(KeyCode.W)) m += 500.0f * Time.deltaTime;
         if (Input.GetKey(KeyCode.S)) m -= 500.0f * Time.deltaTime;
 
-        print("SinValue = "+ SinValue);
         DrawDebugTools.DrawFloatGraph("Sin Value * 2", SinValue * 2.0f, 6.0f, true, FloatSamplesCount);
         DrawDebugTools.DrawFloatGraph("Sin Value", SinValue, 6.0f, false, FloatSamplesCount);
         DrawDebugTools.DrawFloatGraph("m Value", m, 1000.0f, false, FloatSamplesCount);
+        DrawDebugTools.DrawFloatGraph("Sin Value 1", SinValue, 6.0f, false, FloatSamplesCount);
+        DrawDebugTools.DrawFloatGraph("Sin Value 2", SinValue, 6.0f, false, FloatSamplesCount);
+        DrawDebugTools.DrawFloatGraph("Sin Value 3", SinValue, 6.0f, false, FloatSamplesCount);
+        DrawDebugTools.DrawFloatGraph("Sin Value 4", SinValue, 6.0f, false, FloatSamplesCount);
+
+        // Draw distance
+        DrawDebugTools.DrawDistance(new Vector3(-10.0f, 0.0f, 0.0f), MovingSpherePos, Color.green, 0.0f);
     }
 
     float m = 0.0f;
