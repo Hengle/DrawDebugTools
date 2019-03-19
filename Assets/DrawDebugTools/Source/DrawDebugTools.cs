@@ -9,47 +9,60 @@ using System.Xml.Linq;
 public class DrawDebugTools : MonoBehaviour
 {
     #region ========== Variables ==========
-    public static DrawDebugTools Instance;
+    public static DrawDebugTools    Instance;
 
     // Lines
-    private List<BatchedLine> m_BatchedLines;
+    private List<BatchedLine>       m_BatchedLines;
 
     // Materials
-    private Material m_LineMaterial;
-    private Material m_AlphaMaterial;
+    private Material                m_LineMaterial;
+    private Material                m_AlphaMaterial;
 
     // Text
-    private List<DebugText> m_DebugTextesList;
-    private Font m_Debug2DTextFont;
-    private Font m_Debug3DTextFont;
+    public List<DebugText>         m_DebugTextesList;
+    private Font                    m_Debug2DTextFont;
+    private Font                    m_Debug3DTextFont;
 
     // Debug camera
-    private GameObject m_DebugCamera = null;
-    private GameObject m_MainCamera = null;
-    private bool m_DebugCameraIsActive = false;
-    private float m_DebugCameraPitch = 0.0f;
-    private float m_DebugCameraYaw = 0.0f;
-    private float m_DebugCameraMovSpeedMultiplier = 1.0f;
-    private Vector2 m_DebugCameraMovSpeedMultiplierRange = new Vector2(0.05f, 10.0f);
+    private GameObject              m_DebugCamera = null;
+    private GameObject              m_MainCamera = null;
+    private bool                    m_DebugCameraIsActive = false;
+    private float                   m_DebugCameraPitch = 0.0f;
+    private float                   m_DebugCameraYaw = 0.0f;
+    private float                   m_DebugCameraMovSpeedMultiplier = 1.0f;
+    private Vector2                 m_DebugCameraMovSpeedMultiplierRange = new Vector2(0.05f, 10.0f);
 
     // Debug float 
-    private List<DebugFloatGraph> m_FloatGraphsList;
-    private float m_GraphWidth = 300.0f;
-    private float m_GraphHeight = 100.0f;
-    private float m_GraphMargin_Right = 5.0f;
-    private float m_GraphMargin_Buttom = 5.0f;
-    private float m_GraphMargin_Top = 20;
-    private float m_GraphTextAlpha = 0.5f; 
+    private List<DebugFloatGraph>   m_FloatGraphsList;
+    private float                   m_GraphWidth = 300.0f;
+    private float                   m_GraphHeight = 100.0f;
+    private float                   m_GraphMargin_Right = 5.0f;
+    private float                   m_GraphMargin_Buttom = 5.0f;
+    private float                   m_GraphMargin_Top = 20;
+    private float                   m_GraphTextAlpha = 0.5f;
+
+    // Log message
+    private float                   m_LogMessageMarginTop = 20.0f;
+    private float                   m_LogMessageMarginLeft = 20.0f;
+    private List<DebugLogMessage>   m_LogMessagesList;
+    private float                   m_LineSpacing = 15.0f;
+
     #endregion
 
     #region ========== Initialization ==========
     private void Awake()
     {
         Instance = this;
+        // Init batched lines
         m_BatchedLines = new List<BatchedLine>();
 
         // Init debug text list
         m_DebugTextesList = new List<DebugText>();
+
+        m_FloatGraphsList = new List<DebugFloatGraph>();
+        
+        // Init log messsages list
+        m_LogMessagesList = new List<DebugLogMessage>();
     }
 
     private void Start()
@@ -115,6 +128,8 @@ public class DrawDebugTools : MonoBehaviour
     #region ========== Update Function ==========
     private void Update()
     {
+
+        HandleListOfLogMessagesList();
         HandleDebugCamera();
     } 
     #endregion
@@ -701,6 +716,11 @@ public class DrawDebugTools : MonoBehaviour
         DrawDebugTools.DrawString3D(DistTextPos, Quaternion.LookRotation(Camera.main.transform.position - DistTextPos), Dist.ToString(".00"), TextAnchor.MiddleCenter, Color.white, 0.01f, LifeTime);
     }
 
+    public static void Log(string LogMessage, Color Color, float LifeTime = 0.0f)
+    {
+        DrawDebugTools.Instance.m_LogMessagesList.Add(new DebugLogMessage(LogMessage, Color, LifeTime));
+    }
+
     private static void AddDebugText(string Text, TextAnchor Anchor, Vector3 Position, Quaternion Rotation, Color Color, float Size, float LifeTime, bool Is2DText)
     {
         DrawDebugTools.Instance.m_DebugTextesList.Add(new DebugText(Text, Anchor, Position, Rotation, Color, Size, LifeTime, Is2DText));
@@ -1045,7 +1065,29 @@ public class DrawDebugTools : MonoBehaviour
                 m_FloatGraphsList.RemoveAt(i);
             }
         }
-    } 
+    }
+
+    private void HandleListOfLogMessagesList()
+    {
+        Vector3 OriginPosition = new Vector3(m_LogMessageMarginLeft, Screen.height - m_LogMessageMarginTop, 0.0f);
+
+        for (int i = 0; i < m_LogMessagesList.Count; i++)
+        {
+            Vector3 LogPosition = OriginPosition - new Vector3(0.0f, m_LineSpacing * i, 0.0f);
+            if (LogPosition.y > 0.0f)
+                DrawString2D(LogPosition, m_LogMessagesList[i].m_LogMessageText, TextAnchor.LowerLeft, m_LogMessagesList[i].m_Color, 0.0f);
+        }
+
+        // Update log life time
+        for (int i = m_LogMessagesList.Count - 1; i >= 0; i--)
+        {
+            m_LogMessagesList[i].m_RemainingTime -= Time.unscaledDeltaTime;
+            if (m_LogMessagesList[i].m_RemainingTime <= 0.0f)
+            {
+                m_LogMessagesList.RemoveAt(i);
+            }
+        }
+    }
     #endregion
 
     #region ========== Helper Functions ==========
@@ -1188,6 +1230,20 @@ public class DebugFloatGraph
             }
         }
         return BiggestValue;
+    }
+}
+
+public class DebugLogMessage
+{
+    public string   m_LogMessageText;
+    public Color    m_Color;
+    public float    m_RemainingTime;
+
+    public DebugLogMessage(string LogMessageText, Color Color, float LifeTime)
+    {
+        m_LogMessageText = LogMessageText;
+        m_Color = Color;
+        m_RemainingTime = LifeTime;
     }
 }
 

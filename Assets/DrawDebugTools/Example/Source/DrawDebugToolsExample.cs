@@ -5,17 +5,18 @@ using UnityEngine;
 public class DrawDebugToolsExample : MonoBehaviour {
 	private void Start () {
         //DrawDebugTools.DrawDebugString3D(TextPos, "Hello world", anchof, Color.green, 0.0f);
-        
+
+        DrawDebugTools.Log("Text in Start function" , Color.green, 5.0f);
     }
 
     public Vector3 Rot = Vector3.zero;
 	private void Update () {
         // Draw moving sphere
-        float SinValue = Mathf.Sin(Time.timeSinceLevelLoad *4.0f) * FloatMultiplier;
+        float SinValue = Mathf.Sin(Time.timeSinceLevelLoad * 4.0f) * FloatMultiplier;
         Vector3 MovingSpherePos = new Vector3(0.0f, 0.0f, SinValue);
         DrawDebugTools.DrawSphere(MovingSpherePos, Quaternion.Euler(Rot), 2.0f, 8, Color.gray);
         if (Camera.main)
-        {            
+        {
             DrawDebugTools.DrawString2D(Camera.main.WorldToScreenPoint(MovingSpherePos), MovingSpherePos.ToString(), TextAnchor.UpperLeft, Color.cyan, 0.0f);
         }
 
@@ -71,11 +72,11 @@ public class DrawDebugToolsExample : MonoBehaviour {
 
         // Draw text
         //DrawDebugTools.DrawString2D(TextPos, "The quick brown fox jumps over the lazy dog", anchof, Color.green, 0.0f);
-        Quaternion RotationText=Quaternion.identity;
+        Quaternion RotationText = Quaternion.identity;
         if (Camera.main)
         {
             RotationText = Quaternion.LookRotation((new Vector3(0.0f, 30.0f, 0.0f) - Camera.main.transform.position).normalized);
-            
+
         }
         DrawDebugTools.DrawString3D(new Vector3(0.0f, 0.0f, 0.0f), Quaternion.Euler(Rot), "HELLO TEXT WORLD", anchof, Color.green, 0.01f, 0.0f);
 
@@ -93,6 +94,15 @@ public class DrawDebugToolsExample : MonoBehaviour {
 
         // Draw distance
         DrawDebugTools.DrawDistance(new Vector3(-10.0f, 0.0f, 0.0f), MovingSpherePos, Color.green, 0.0f);
+
+        // Log
+        DrawDebugTools.Log("Hello world - " + Time.deltaTime, Color.green, 1.0f);
+        
+
+        if (Input.GetMouseButtonDown(0))
+        {
+            DrawDebugTools.Log("Hello Click", Color.red, 4.0f);
+        }
     }
 
     float m = 0.0f;
