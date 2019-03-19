@@ -6,44 +6,43 @@ using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 
-//*********************************//
-// Main class                      //
-//*********************************//
-
 public class DrawDebugTools : MonoBehaviour
 {
-    //*********************************//
-    // Variables                       //
-    //*********************************//
-    public static DrawDebugTools        Instance;
+    #region ========== Variables ==========
+    public static DrawDebugTools Instance;
 
     // Lines
-    private List<BatchedLine>           m_BatchedLines;
+    private List<BatchedLine> m_BatchedLines;
 
     // Materials
-    private Material                     m_LineMaterial;
-    private Material                    m_AlphaMaterial;
+    private Material m_LineMaterial;
+    private Material m_AlphaMaterial;
 
     // Text
-    private List<DebugText>             m_DebugTextesList;
-    private Font                        m_Debug2DTextFont;
-    private Font                        m_Debug3DTextFont;
+    private List<DebugText> m_DebugTextesList;
+    private Font m_Debug2DTextFont;
+    private Font m_Debug3DTextFont;
 
     // Debug camera
-    private GameObject                  m_DebugCamera = null;
-    private GameObject                  m_MainCamera = null;
-    private bool                        m_DebugCameraIsActive = false;
-    private float                       m_DebugCameraPitch = 0.0f;
-    private float                       m_DebugCameraYaw = 0.0f;
-    private float                       m_DebugCameraMovSpeedMultiplier = 1.0f;
-    private Vector2                     m_DebugCameraMovSpeedMultiplierRange = new Vector2(0.05f, 10.0f);
+    private GameObject m_DebugCamera = null;
+    private GameObject m_MainCamera = null;
+    private bool m_DebugCameraIsActive = false;
+    private float m_DebugCameraPitch = 0.0f;
+    private float m_DebugCameraYaw = 0.0f;
+    private float m_DebugCameraMovSpeedMultiplier = 1.0f;
+    private Vector2 m_DebugCameraMovSpeedMultiplierRange = new Vector2(0.05f, 10.0f);
 
     // Debug float 
-    public List<DebugFloatGraph>            m_FloatGraphsList;
+    private List<DebugFloatGraph> m_FloatGraphsList;
+    private float m_GraphWidth = 300.0f;
+    private float m_GraphHeight = 100.0f;
+    private float m_GraphMargin_Right = 5.0f;
+    private float m_GraphMargin_Buttom = 5.0f;
+    private float m_GraphMargin_Top = 20;
+    private float m_GraphTextAlpha = 0.5f; 
+    #endregion
 
-    //*********************************//
-    // Functions                       //
-    //*********************************//
+    #region ========== Initialization ==========
     private void Awake()
     {
         Instance = this;
@@ -62,11 +61,48 @@ public class DrawDebugTools : MonoBehaviour
         m_Debug2DTextFont = Font.CreateDynamicFontFromOSFont(FontName, 12);
         m_Debug2DTextFont.RequestCharactersInTexture(" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~", 12, FontStyle.Normal);
 
-        m_Debug3DTextFont = Font.CreateDynamicFontFromOSFont(FontName, 32);                
+        m_Debug3DTextFont = Font.CreateDynamicFontFromOSFont(FontName, 32);
         m_Debug3DTextFont.RequestCharactersInTexture(" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~", 32, FontStyle.Normal);
 
     }
 
+    private void InitializeMaterials()
+    {
+        if (!m_LineMaterial)
+        {
+            Shader Shader = Shader.Find("Hidden/Internal-Colored");
+            m_LineMaterial = new Material(Shader);
+            m_LineMaterial.hideFlags = HideFlags.HideAndDontSave;
+
+            //Turn on alpha blending
+            m_LineMaterial.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            m_LineMaterial.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+
+            //Turn backface culling off
+            m_LineMaterial.SetInt("_Cull", (int)UnityEngine.Rendering.CullMode.Off);
+
+            //Turn off depth writes
+            m_LineMaterial.SetInt("_ZWrite", 0);
+
+            Shader = Shader.Find("Hidden/Internal-GUITexture");
+            m_AlphaMaterial = new Material(Shader);
+
+            m_AlphaMaterial.hideFlags = HideFlags.HideAndDontSave;
+
+            //  Turn on alpha blending
+            m_AlphaMaterial.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            m_AlphaMaterial.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+
+            //  Turn backface culling off
+            m_AlphaMaterial.SetInt("_Cull", (int)UnityEngine.Rendering.CullMode.Off);
+
+            //  Turn off depth writes
+            m_AlphaMaterial.SetInt("_ZWrite", 0);
+        }
+    }
+    #endregion
+
+    #region ========== OnPostRender Function ==========
     private IEnumerator OnPostRender()
     {
         yield return new WaitForEndOfFrame();
@@ -74,14 +110,16 @@ public class DrawDebugTools : MonoBehaviour
         HandleDrawingListOfTextes();
         HandleDrawingListOfFloatGraphs();
     }
+    #endregion
 
+    #region ========== Update Function ==========
     private void Update()
     {
         HandleDebugCamera();
-    }
+    } 
+    #endregion
 
-    //////////////////////////////////////////////
-    // Debug camera
+    #region ========== Camera Debug ==========
     private void HandleDebugCamera()
     {
         // Toggle debug camera 
@@ -128,7 +166,7 @@ public class DrawDebugTools : MonoBehaviour
             if (Input.GetMouseButton(0))
             {
                 m_DebugCameraYaw += Input.GetAxis("Mouse X") * RotateSpeed * Time.unscaledDeltaTime;
-                m_DebugCameraPitch += -Input.GetAxis("Mouse Y")* RotateSpeed * Time.unscaledDeltaTime;
+                m_DebugCameraPitch += -Input.GetAxis("Mouse Y") * RotateSpeed * Time.unscaledDeltaTime;
                 m_DebugCamera.transform.eulerAngles = new Vector3(m_DebugCameraPitch, m_DebugCameraYaw, 0.0f);
             }
 
@@ -147,13 +185,13 @@ public class DrawDebugTools : MonoBehaviour
             DrawString2D(new Vector2(20.0f, Screen.height - TextTopMargin - TextLinesHeight), "Debug Camera", TextAnchor.LowerLeft, Color.cyan);
 
             TextLinesHeight += 20.0f;
-            DrawString2D(new Vector2(20.0f, Screen.height - TextTopMargin - TextLinesHeight), "Position: "+ m_DebugCamera.transform.position.ToString(), TextAnchor.LowerLeft, Color.yellow);
+            DrawString2D(new Vector2(20.0f, Screen.height - TextTopMargin - TextLinesHeight), "Position: " + m_DebugCamera.transform.position.ToString(), TextAnchor.LowerLeft, Color.yellow);
 
             TextLinesHeight += 15.0f;
             DrawString2D(new Vector2(20.0f, Screen.height - TextTopMargin - TextLinesHeight), "Rotation: " + m_DebugCamera.transform.eulerAngles.ToString(), TextAnchor.LowerLeft, Color.yellow);
 
             TextLinesHeight += 15.0f;
-            DrawString2D(new Vector2(20.0f, Screen.height - TextTopMargin - TextLinesHeight), "Mov speed multiplier: "+ m_DebugCameraMovSpeedMultiplier.ToString("00.00"), TextAnchor.LowerLeft, Color.yellow);
+            DrawString2D(new Vector2(20.0f, Screen.height - TextTopMargin - TextLinesHeight), "Mov speed multiplier: " + m_DebugCameraMovSpeedMultiplier.ToString("00.00"), TextAnchor.LowerLeft, Color.yellow);
 
             TextLinesHeight += 15.0f;
             DrawString2D(new Vector2(20.0f, Screen.height - TextTopMargin - TextLinesHeight), "Time scale: " + Time.timeScale, TextAnchor.LowerLeft, Color.yellow);
@@ -165,7 +203,7 @@ public class DrawDebugTools : MonoBehaviour
                 DrawString2D(new Vector2(20.0f, Screen.height - TextTopMargin - TextLinesHeight), "Debug RaycastHit Infos", TextAnchor.LowerLeft, Color.cyan);
 
                 TextLinesHeight += 20.0f;
-                DrawString2D(new Vector2(20.0f, Screen.height - TextTopMargin - TextLinesHeight), "Ray hit point: "+DebugHitInfos.point.ToString(), TextAnchor.LowerLeft, Color.yellow);
+                DrawString2D(new Vector2(20.0f, Screen.height - TextTopMargin - TextLinesHeight), "Ray hit point: " + DebugHitInfos.point.ToString(), TextAnchor.LowerLeft, Color.yellow);
 
                 TextLinesHeight += 15.0f;
                 DrawString2D(new Vector2(20.0f, Screen.height - TextTopMargin - TextLinesHeight), "Ray hit normal: " + DebugHitInfos.normal.ToString(), TextAnchor.LowerLeft, Color.yellow);
@@ -192,7 +230,7 @@ public class DrawDebugTools : MonoBehaviour
                 if (DebugHitInfos.transform.GetComponent<MeshRenderer>() != null || DebugHitInfos.transform.GetComponent<SkinnedMeshRenderer>() != null)
                 {
                     Material[] MatsArray;
-                    if(DebugHitInfos.transform.GetComponent<MeshRenderer>() != null)
+                    if (DebugHitInfos.transform.GetComponent<MeshRenderer>() != null)
                         MatsArray = DebugHitInfos.transform.GetComponent<MeshRenderer>().materials;
                     else
                         MatsArray = DebugHitInfos.transform.GetComponent<SkinnedMeshRenderer>().materials;
@@ -201,8 +239,8 @@ public class DrawDebugTools : MonoBehaviour
                     DrawString2D(new Vector2(30.0f, Screen.height - TextTopMargin - TextLinesHeight), "Debug Mesh Materials", TextAnchor.LowerLeft, Color.cyan);
                     TextLinesHeight += 20.0f;
                     for (int i = 0; i < MatsArray.Length; i++)
-                    {                        
-                        DrawString2D(new Vector2(70.0f, Screen.height - TextTopMargin - TextLinesHeight), "Mat ("+i+"): "+MatsArray[i].name, TextAnchor.LowerLeft, Color.yellow);
+                    {
+                        DrawString2D(new Vector2(70.0f, Screen.height - TextTopMargin - TextLinesHeight), "Mat (" + i + "): " + MatsArray[i].name, TextAnchor.LowerLeft, Color.yellow);
                         TextLinesHeight += 15.0f;
                     }
                 }
@@ -231,7 +269,7 @@ public class DrawDebugTools : MonoBehaviour
             // Delete debug camera 
             Destroy(DrawDebugTools.Instance.m_DebugCamera);
             DrawDebugTools.Instance.m_MainCamera.tag = "MainCamera";
-            DrawDebugTools.Instance.m_DebugCameraIsActive = false;           
+            DrawDebugTools.Instance.m_DebugCameraIsActive = false;
         }
         else
         {
@@ -252,7 +290,7 @@ public class DrawDebugTools : MonoBehaviour
 
             // Set components
             Component[] ComponentsArray = DrawDebugTools.Instance.m_MainCamera.GetComponents(typeof(Component));
-            System.Type[] CompsToInclude  = new System.Type[] { typeof(Transform), typeof(Camera)};
+            System.Type[] CompsToInclude = new System.Type[] { typeof(Transform), typeof(Camera) };
             for (int i = 0; i < ComponentsArray.Length; i++)
             {
                 if (CompsToInclude.Contains(ComponentsArray[i].GetType()))
@@ -267,48 +305,10 @@ public class DrawDebugTools : MonoBehaviour
             // Set debug camera active flag
             DrawDebugTools.Instance.m_DebugCameraIsActive = true;
         }
-    }
-    // Debug camera end
-    //////////////////////////////////////////////
+    } 
+    #endregion
 
-    //////////////////////////////////////////////
-    // Float history
-
-    // Float history end
-    //////////////////////////////////////////////
-    ///
-    private void InitializeMaterials()
-    {
-        if (!m_LineMaterial)
-        {
-            Shader shader = Shader.Find("Hidden/Internal-Colored");
-            m_LineMaterial = new Material(shader);
-            m_LineMaterial.hideFlags = HideFlags.HideAndDontSave;
-            
-            //Turn on alpha blending
-            m_LineMaterial.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-            m_LineMaterial.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-            
-            //Turn backface culling off
-            m_LineMaterial.SetInt("_Cull", (int)UnityEngine.Rendering.CullMode.Off);
-            
-            //Turn off depth writes
-            m_LineMaterial.SetInt("_ZWrite", 0);
-
-            Shader shader3 = Shader.Find("Hidden/Internal-GUITexture");
-            m_AlphaMaterial = new Material(shader3);
-
-            //m_AlphaMaterial.hideFlags = HideFlags.HideAndDontSave;
-           //  Turn on alpha blending
-           // m_AlphaMaterial.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-           // m_AlphaMaterial.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-           //  Turn backface culling off
-           //m_AlphaMaterial.SetInt("_Cull", (int)UnityEngine.Rendering.CullMode.Off);
-           //  Turn off depth writes
-           // m_AlphaMaterial.SetInt("_ZWrite", 0);
-        }
-    }
-
+    #region ========== Drawing Functions ==========
     public static void DrawSphere(Vector3 Center, float Radius, int Segments, Color Color, float LifeTime = 0.0f)
     {
         DrawSphere(Center, Quaternion.identity, Radius, Segments, Color, LifeTime = 0.0f);
@@ -323,7 +323,7 @@ public class DrawDebugTools : MonoBehaviour
 
         List<BatchedLine> Lines;
         Lines = new List<BatchedLine>();
-        
+
         for (int i = 0; i < Segments; i++)
         {
             float PolarAngle = AngleInc;
@@ -381,9 +381,9 @@ public class DrawDebugTools : MonoBehaviour
         // X
         InternalDrawLine(Position + new Vector3(-Size / 2.0f, 0.0f, 0.0f), Position + new Vector3(Size / 2.0f, 0.0f, 0.0f), Position, Quaternion.identity, Color, LifeTime);
         // Y
-        InternalDrawLine(Position + new Vector3( 0.0f, -Size / 2.0f,0.0f), Position + new Vector3( 0.0f, Size / 2.0f, 0.0f), Position, Quaternion.identity, Color, LifeTime);
+        InternalDrawLine(Position + new Vector3(0.0f, -Size / 2.0f, 0.0f), Position + new Vector3(0.0f, Size / 2.0f, 0.0f), Position, Quaternion.identity, Color, LifeTime);
         // Z
-        InternalDrawLine(Position + new Vector3(0.0f,  0.0f, -Size / 2.0f), Position + new Vector3(0.0f, 0.0f, Size / 2.0f), Position, Quaternion.identity, Color, LifeTime);
+        InternalDrawLine(Position + new Vector3(0.0f, 0.0f, -Size / 2.0f), Position + new Vector3(0.0f, 0.0f, Size / 2.0f), Position, Quaternion.identity, Color, LifeTime);
     }
 
     public static void DrawDirectionalArrow(Vector3 LineStart, Vector3 LineEnd, float ArrowSize, Color Color, float LifeTime = 0.0f)
@@ -513,7 +513,7 @@ public class DrawDebugTools : MonoBehaviour
             Angle += AngleInc;
             RotatedVect = Quaternion.AngleAxis(Mathf.Rad2Deg * Angle, CylinderUp) * CylinderRight * Radius;
 
-            P_3 = Start+ RotatedVect;
+            P_3 = Start + RotatedVect;
             P_4 = P_3 + CylinderUp * CylinderHeight;
 
             // Draw lines
@@ -593,10 +593,10 @@ public class DrawDebugTools : MonoBehaviour
         DrawLine(CurrentPoint, FirstPoint, Color, LifeTime);
     }
 
-    public static void DrawString2D(Vector2 Position, string Text, TextAnchor Anchor, Color  TextColor, float LifeTime = 0.0f)
+    public static void DrawString2D(Vector2 Position, string Text, TextAnchor Anchor, Color TextColor, float LifeTime = 0.0f)
     {
         AddDebugText(Text, Anchor, Position - new Vector2(0.0f, 1.0f), Quaternion.identity, Color.black, 1.0f, LifeTime, true);
-        AddDebugText(Text, Anchor, Position, Quaternion.identity, TextColor, 1.0f, LifeTime, true);        
+        AddDebugText(Text, Anchor, Position, Quaternion.identity, TextColor, 1.0f, LifeTime, true);
     }
 
     public static void DrawString3D(Vector3 Position, Quaternion Rotation, string Text, TextAnchor Anchor, Color TextColor, float TextSize = 1.0f, float LifeTime = 0.0f)
@@ -607,17 +607,17 @@ public class DrawDebugTools : MonoBehaviour
     public static void DrawFrustum(Camera Camera, Color Color, float LifeTime = 0.0f)
     {
         Plane[] FrustumPlanes = DrawDebugTools.Instance.m_DebugCameraIsActive ? GeometryUtility.CalculateFrustumPlanes(DrawDebugTools.Instance.m_MainCamera.GetComponent<Camera>()) : GeometryUtility.CalculateFrustumPlanes(Camera);
-        Vector3[] NearPlaneCorners = new Vector3[4]; 
-        Vector3[] FarePlaneCorners = new Vector3[4]; 
-        
+        Vector3[] NearPlaneCorners = new Vector3[4];
+        Vector3[] FarePlaneCorners = new Vector3[4];
+
         Plane TempPlane = FrustumPlanes[1]; FrustumPlanes[1] = FrustumPlanes[2]; FrustumPlanes[2] = TempPlane;
 
         for (int i = 0; i < 4; i++)
         {
-            NearPlaneCorners[i] = GetIntersectionPointOfPlanes(FrustumPlanes[4], FrustumPlanes[i], FrustumPlanes[(i + 1) % 4]); 
+            NearPlaneCorners[i] = GetIntersectionPointOfPlanes(FrustumPlanes[4], FrustumPlanes[i], FrustumPlanes[(i + 1) % 4]);
             FarePlaneCorners[i] = GetIntersectionPointOfPlanes(FrustumPlanes[5], FrustumPlanes[i], FrustumPlanes[(i + 1) % 4]);
         }
-        
+
         for (int i = 0; i < 4; i++)
         {
             InternalDrawLine(NearPlaneCorners[i], NearPlaneCorners[(i + 1) % 4], Vector3.zero, Quaternion.identity, Color, LifeTime);
@@ -644,7 +644,7 @@ public class DrawDebugTools : MonoBehaviour
         float AngleDelta = 2.0f * Mathf.PI / Segments;
         Vector3 LastPoint = Base + X * Radius;
 
-        for (int i = 0; i < (Segments/2); i++)
+        for (int i = 0; i < (Segments / 2); i++)
         {
             Vector3 Point = Base + (X * Mathf.Cos(AngleDelta * (i + 1)) + Z * Mathf.Sin(AngleDelta * (i + 1))) * Radius;
             InternalDrawLine(LastPoint, Point, Base, Quaternion.identity, Color, LifeTime);
@@ -701,16 +701,16 @@ public class DrawDebugTools : MonoBehaviour
         DrawDebugTools.DrawString3D(DistTextPos, Quaternion.LookRotation(Camera.main.transform.position - DistTextPos), Dist.ToString(".00"), TextAnchor.MiddleCenter, Color.white, 0.01f, LifeTime);
     }
 
-    private static void AddDebugText(string Text, TextAnchor Anchor, Vector3 Position, Quaternion Rotation,  Color Color, float Size, float LifeTime, bool Is2DText)
+    private static void AddDebugText(string Text, TextAnchor Anchor, Vector3 Position, Quaternion Rotation, Color Color, float Size, float LifeTime, bool Is2DText)
     {
         DrawDebugTools.Instance.m_DebugTextesList.Add(new DebugText(Text, Anchor, Position, Rotation, Color, Size, LifeTime, Is2DText));
     }
 
     public static void DrawFloatGraph(string UniqueGraphName, float FloatValueToDebug, float GraphHalfMinMaxRange = 100.0f, bool AutoAdjustMinMaxRange = false, int SamplesCount = 50)
     {
-        bool    IsFloatAlreadyExists = false;
-        int     FloatIndex = -1;
-        float   TimeBeforeRemoveInactiveGraph = 2.0f;
+        bool IsFloatAlreadyExists = false;
+        int FloatIndex = -1;
+        float TimeBeforeRemoveInactiveGraph = 2.0f;
 
         for (int i = 0; i < DrawDebugTools.Instance.m_FloatGraphsList.Count; i++)
         {
@@ -731,14 +731,9 @@ public class DrawDebugTools : MonoBehaviour
         }
     }
 
-    private static Vector3 GetIntersectionPointOfPlanes(Plane Plane_1, Plane Plane_2, Plane Plane_3)
-    {
-        return ((-Plane_1.distance * Vector3.Cross(Plane_2.normal, Plane_3.normal)) +
-                (-Plane_2.distance * Vector3.Cross(Plane_3.normal, Plane_1.normal)) +
-                (-Plane_3.distance * Vector3.Cross(Plane_1.normal, Plane_2.normal))) /
-            (Vector3.Dot(Plane_1.normal, Vector3.Cross(Plane_2.normal, Plane_3.normal)));
-    }
+    #endregion
 
+    #region ========== Handle Drawing Lines/Quads ==========
     private void HandleDrawingListOfLines()
     {
         if (m_BatchedLines.Count == 0)
@@ -796,7 +791,7 @@ public class DrawDebugTools : MonoBehaviour
         // Filter 2D textes
         List<DebugText> DebugText2DList = new List<DebugText>();
         List<DebugText> DebugText3DList = new List<DebugText>();
-        for (int i = 0; i< m_DebugTextesList.Count; i++)
+        for (int i = 0; i < m_DebugTextesList.Count; i++)
         {
             if (m_DebugTextesList[i].m_Is2DText)
             {
@@ -807,7 +802,7 @@ public class DrawDebugTools : MonoBehaviour
                 DebugText3DList.Add(m_DebugTextesList[i]);
             }
         }
-        
+
         // Draw 3D text
         GL.PushMatrix();
         m_Debug3DTextFont.material.SetPass(0);
@@ -819,8 +814,8 @@ public class DrawDebugTools : MonoBehaviour
             GL.Color(DebugText3DList[i].m_TextColor);
             Vector3 OriginPosition = DebugText3DList[i].GetTextOriginPosition(m_Debug3DTextFont);
             float Size = DebugText3DList[i].m_Size;
-            Matrix4x4 M = Matrix4x4.identity;            
-            M.SetTRS(Vector3.zero, DebugText3DList[i].m_TextRotation, Vector3.one);            
+            Matrix4x4 M = Matrix4x4.identity;
+            M.SetTRS(Vector3.zero, DebugText3DList[i].m_TextRotation, Vector3.one);
             Vector3 CharPos = OriginPosition;
             for (int j = 0; j < DebugText3DList[i].m_TextString.Length; j++)
             {
@@ -904,28 +899,22 @@ public class DrawDebugTools : MonoBehaviour
         }
         GL.End();
         GL.PopMatrix();
-                
+
         // Update text life time
         for (int i = m_DebugTextesList.Count - 1; i >= 0; i--)
         {
-                m_DebugTextesList[i].m_RemainLifeTime -= Time.deltaTime;
-                if (m_DebugTextesList[i].m_RemainLifeTime <= 0.0f)
-                {
-                    m_DebugTextesList.RemoveAt(i);
-                }
+            m_DebugTextesList[i].m_RemainLifeTime -= Time.deltaTime;
+            if (m_DebugTextesList[i].m_RemainLifeTime <= 0.0f)
+            {
+                m_DebugTextesList.RemoveAt(i);
+            }
         }
     }
 
     private void HandleDrawingListOfFloatGraphs()
     {
-        float               GraphWidth = 300.0f;
-        float               GraphHeight = 100.0f;
-        float               GraphMargin_Right = 5.0f;
-        float               GraphMargin_Buttom = 5.0f;
-        float               GraphMargin_Top = 20;
-        Vector3             OriginPosition = Vector3.zero;
-        DebugFloatGraph[]   FloatGraphsArray = DrawDebugTools.Instance.m_FloatGraphsList.ToArray();
-        float               TextAlpha = 0.5f;
+        Vector3 OriginPosition = Vector3.zero;
+        DebugFloatGraph[] FloatGraphsArray = DrawDebugTools.Instance.m_FloatGraphsList.ToArray();
 
         // Draw background
         GL.PushMatrix();
@@ -939,42 +928,42 @@ public class DrawDebugTools : MonoBehaviour
         for (int i = 0; i < FloatGraphsArray.Length; i++)
         {
             // Set origin position
-            float TargetPosY = (GraphMargin_Buttom + GraphHeight + GraphMargin_Top) * GraphPosIndexY;            
-            if (TargetPosY > Screen.height - (GraphHeight + GraphMargin_Buttom))
+            float TargetPosY = (m_GraphMargin_Buttom + m_GraphHeight + m_GraphMargin_Top) * GraphPosIndexY;
+            if (TargetPosY > Screen.height - (m_GraphHeight + m_GraphMargin_Buttom))
             {
                 GraphPosIndexX++;
                 GraphPosIndexY = 0;
             }
-            OriginPosition = new Vector3(Screen.width - (GraphWidth + GraphMargin_Right) * GraphPosIndexX, GraphMargin_Buttom + (GraphHeight + GraphMargin_Top) * GraphPosIndexY);
+            OriginPosition = new Vector3(Screen.width - (m_GraphWidth + m_GraphMargin_Right) * GraphPosIndexX, m_GraphMargin_Buttom + (m_GraphHeight + m_GraphMargin_Top) * GraphPosIndexY);
             GraphPosIndexY++;
 
             // Draw text
             float TextButtomMargin = 5.0f;
 
             // Draw graph title
-            DrawString2D(OriginPosition + new Vector3(0.0f, GraphHeight + TextButtomMargin, 0.0f), FloatGraphsArray[i].m_UniqueFloatName, TextAnchor.LowerLeft, Color.white, 0.0f);
+            DrawString2D(OriginPosition + new Vector3(0.0f, m_GraphHeight + TextButtomMargin, 0.0f), FloatGraphsArray[i].m_UniqueFloatName, TextAnchor.LowerLeft, Color.white, 0.0f);
 
             // Draw min and max values
-            AddDebugText(FloatGraphsArray[i].m_GraphValueLengh.ToString(), TextAnchor.UpperLeft, OriginPosition + new Vector3(2.0f, GraphHeight, 0.0f), Quaternion.identity, Color.white * new Color(1.0f, 1.0f, 1.0f, TextAlpha), 1.0f, 0.0f, true);
-            AddDebugText((-FloatGraphsArray[i].m_GraphValueLengh).ToString(), TextAnchor.LowerLeft, OriginPosition + new Vector3(2.0f, 2.0f, 0.0f), Quaternion.identity, Color.white * new Color(1.0f, 1.0f, 1.0f, TextAlpha), 1.0f, 0.0f, true);
+            AddDebugText(FloatGraphsArray[i].m_GraphValueLengh.ToString(), TextAnchor.UpperLeft, OriginPosition + new Vector3(2.0f, m_GraphHeight, 0.0f), Quaternion.identity, Color.white * new Color(1.0f, 1.0f, 1.0f, m_GraphTextAlpha), 1.0f, 0.0f, true);
+            AddDebugText((-FloatGraphsArray[i].m_GraphValueLengh).ToString(), TextAnchor.LowerLeft, OriginPosition + new Vector3(2.0f, 2.0f, 0.0f), Quaternion.identity, Color.white * new Color(1.0f, 1.0f, 1.0f, m_GraphTextAlpha), 1.0f, 0.0f, true);
 
 
             // Draw bg points
-            GL.TexCoord2(0.0f,0.0f);
+            GL.TexCoord2(0.0f, 0.0f);
             GL.Vertex(OriginPosition);
 
             GL.TexCoord2(0.0f, 1.0f);
-            GL.Vertex(OriginPosition + new Vector3(0.0f, GraphHeight, 0.0f));
+            GL.Vertex(OriginPosition + new Vector3(0.0f, m_GraphHeight, 0.0f));
 
             GL.TexCoord2(1.0f, 1.0f);
-            GL.Vertex(OriginPosition + new Vector3(GraphWidth, GraphHeight, 0.0f));
+            GL.Vertex(OriginPosition + new Vector3(m_GraphWidth, m_GraphHeight, 0.0f));
 
             GL.TexCoord2(1.0f, 0.0f);
-            GL.Vertex(OriginPosition + new Vector3(GraphWidth, 0.0f, 0.0f));
+            GL.Vertex(OriginPosition + new Vector3(m_GraphWidth, 0.0f, 0.0f));
         }
 
         GL.End();
-        
+
         // Draw lines to show float value
         GL.Begin(GL.LINES);
 
@@ -987,50 +976,50 @@ public class DrawDebugTools : MonoBehaviour
         for (int i = 0; i < FloatGraphsArray.Length; i++)
         {
             // Set origin position
-            float TargetPosY = (GraphMargin_Buttom + GraphHeight + GraphMargin_Top) * GraphPosIndexY;
-            if (TargetPosY > Screen.height - (GraphHeight + GraphMargin_Buttom))
+            float TargetPosY = (m_GraphMargin_Buttom + m_GraphHeight + m_GraphMargin_Top) * GraphPosIndexY;
+            if (TargetPosY > Screen.height - (m_GraphHeight + m_GraphMargin_Buttom))
             {
                 GraphPosIndexX++;
                 GraphPosIndexY = 0;
             }
-            OriginPosition = new Vector3(Screen.width - (GraphWidth + GraphMargin_Right) * GraphPosIndexX, GraphMargin_Buttom + (GraphHeight + GraphMargin_Top) * GraphPosIndexY);
+            OriginPosition = new Vector3(Screen.width - (m_GraphWidth + m_GraphMargin_Right) * GraphPosIndexX, m_GraphMargin_Buttom + (m_GraphHeight + m_GraphMargin_Top) * GraphPosIndexY);
             GraphPosIndexY++;
 
-            GraphStepX = GraphWidth / FloatGraphsArray[i].m_SamplesCount;
-            GraphStepY = (GraphHeight / 2.0f) / FloatGraphsArray[i].m_GraphValueLengh;
+            GraphStepX = m_GraphWidth / FloatGraphsArray[i].m_SamplesCount;
+            GraphStepY = (m_GraphHeight / 2.0f) / FloatGraphsArray[i].m_GraphValueLengh;
 
-            OffsetY = (GraphHeight / 2.0f);
+            OffsetY = (m_GraphHeight / 2.0f);
 
             // Draw line in the half of the graph = 0
             GL.Color(new Color(0.3f, 1.0f, 0.2f, 0.2f));
 
-            GL.Vertex(new Vector3(OriginPosition.x, OriginPosition.y + GraphHeight / 2.0f));
-            GL.Vertex(new Vector3(OriginPosition.x + GraphWidth, OriginPosition.y + GraphHeight / 2.0f));
+            GL.Vertex(new Vector3(OriginPosition.x, OriginPosition.y + m_GraphHeight / 2.0f));
+            GL.Vertex(new Vector3(OriginPosition.x + m_GraphWidth, OriginPosition.y + m_GraphHeight / 2.0f));
 
             // Draw curve
             if (DrawDebugTools.Instance.m_FloatGraphsList[i].m_FloatValuesList.Count > 0)
             {
                 GL.Color(new Color(1.0f, 1.0f, 0.2f, 0.9f));
 
-                Vector3     LineStart   = Vector3.zero;
-                Vector3     LineEnd     = Vector3.zero;
-                float       FloatValue  = 0.0f;
+                Vector3 LineStart = Vector3.zero;
+                Vector3 LineEnd = Vector3.zero;
+                float FloatValue = 0.0f;
                 float X;
                 float Y;
 
                 for (int j = 0; j < DrawDebugTools.Instance.m_FloatGraphsList[i].m_FloatValuesList.Count; j++)
-                {                    
+                {
                     if (j == 0)
                     {
                         FloatValue = DrawDebugTools.Instance.m_FloatGraphsList[i].m_FloatValuesList[j];
-                        LineStart = OriginPosition + new Vector3(0.0f, Mathf.Clamp(OffsetY + FloatValue * GraphStepY, 0.0f, GraphHeight), 0.0f);
+                        LineStart = OriginPosition + new Vector3(0.0f, Mathf.Clamp(OffsetY + FloatValue * GraphStepY, 0.0f, m_GraphHeight), 0.0f);
                     }
 
                     if (j < DrawDebugTools.Instance.m_FloatGraphsList[i].m_FloatValuesList.Count - 1)
                         FloatValue = DrawDebugTools.Instance.m_FloatGraphsList[i].m_FloatValuesList[j + 1];
 
                     X = (j + 1) * GraphStepX;
-                    Y = Mathf.Clamp(OffsetY + FloatValue * GraphStepY, 0.0f, GraphHeight);
+                    Y = Mathf.Clamp(OffsetY + FloatValue * GraphStepY, 0.0f, m_GraphHeight);
 
                     LineEnd = OriginPosition + new Vector3(X, Y, 0.0f);
 
@@ -1041,12 +1030,12 @@ public class DrawDebugTools : MonoBehaviour
                 }
 
                 // draw value text
-                AddDebugText((FloatValue).ToString(".000"), FloatValue >= 0.0f ? TextAnchor.UpperRight : TextAnchor.LowerRight, new Vector3(OriginPosition.x + GraphWidth, Mathf.Clamp(LineEnd.y, OriginPosition.y, OriginPosition.y + GraphHeight), 0.0f), Quaternion.identity, Color.white * new Color(1.0f, 1.0f, 1.0f, 1.0f), 1.0f, 0.0f, true);
+                AddDebugText((FloatValue).ToString(".000"), FloatValue >= 0.0f ? TextAnchor.UpperRight : TextAnchor.LowerRight, new Vector3(OriginPosition.x + m_GraphWidth, Mathf.Clamp(LineEnd.y, OriginPosition.y, OriginPosition.y + m_GraphHeight), 0.0f), Quaternion.identity, Color.white * new Color(1.0f, 1.0f, 1.0f, 1.0f), 1.0f, 0.0f, true);
             }
         }
         GL.End();
         GL.PopMatrix();
-          
+
         // Update text life time
         for (int i = m_FloatGraphsList.Count - 1; i >= 0; i--)
         {
@@ -1056,6 +1045,16 @@ public class DrawDebugTools : MonoBehaviour
                 m_FloatGraphsList.RemoveAt(i);
             }
         }
+    } 
+    #endregion
+
+    #region ========== Helper Functions ==========
+    private static Vector3 GetIntersectionPointOfPlanes(Plane Plane_1, Plane Plane_2, Plane Plane_3)
+    {
+        return ((-Plane_1.distance * Vector3.Cross(Plane_2.normal, Plane_3.normal)) +
+                (-Plane_2.distance * Vector3.Cross(Plane_3.normal, Plane_1.normal)) +
+                (-Plane_3.distance * Vector3.Cross(Plane_1.normal, Plane_2.normal))) /
+            (Vector3.Dot(Plane_1.normal, Vector3.Cross(Plane_2.normal, Plane_3.normal)));
     }
 
     public static void FlushDebugLines()
@@ -1065,13 +1064,12 @@ public class DrawDebugTools : MonoBehaviour
         {
             DrawDebugTools.Instance.m_BatchedLines.RemoveAt(i);
         }
-    }
+    } 
+    #endregion
 }
 
-//*********************************//
-// Structures | Enums              //
-//*********************************//
 
+#region ========== Enums And Structures ==========
 public class BatchedLine
 {
     public Vector3 Start;
@@ -1099,31 +1097,30 @@ public enum EDrawPlaneAxis
     YZ
 };
 
-[System.Serializable]
 public class DebugFloatGraph
 {
-    public string           m_UniqueFloatName = "";
-    public int              m_SamplesCount = 0;
-    public List<float>      m_FloatValuesList;
-    public float            m_GraphValueLengh;
-    public float            m_MinValue;
-    public float            m_MaxValue;
-    public bool             m_AutoAdjustMinMaxRange = false;
-    public float            m_TimeBeforeRemove;
-    public float            m_TimeBeforeRemoveCounter = 0.0f;
-    private int             m_Y, m_X;
+    public string m_UniqueFloatName = "";
+    public int m_SamplesCount = 0;
+    public List<float> m_FloatValuesList;
+    public float m_GraphValueLengh;
+    public float m_MinValue;
+    public float m_MaxValue;
+    public bool m_AutoAdjustMinMaxRange = false;
+    public float m_TimeBeforeRemove;
+    public float m_TimeBeforeRemoveCounter = 0.0f;
+    private int m_Y, m_X;
     public DebugFloatGraph()
     {
     }
 
     public DebugFloatGraph(string UniqueFloatName, int SamplesCount, float GraphValueLengh, bool AutoAdjustMinMaxRange, float TimeBeforeRemove)
     {
-        m_UniqueFloatName           = UniqueFloatName;
-        m_SamplesCount              = SamplesCount;
-        m_FloatValuesList           = new List<float>();
-        m_GraphValueLengh           = GraphValueLengh;
-        m_AutoAdjustMinMaxRange     = AutoAdjustMinMaxRange;
-        m_TimeBeforeRemove          = TimeBeforeRemove;
+        m_UniqueFloatName = UniqueFloatName;
+        m_SamplesCount = SamplesCount;
+        m_FloatValuesList = new List<float>();
+        m_GraphValueLengh = GraphValueLengh;
+        m_AutoAdjustMinMaxRange = AutoAdjustMinMaxRange;
+        m_TimeBeforeRemove = TimeBeforeRemove;
         m_Y = 0;
         m_X = 1;
     }
@@ -1196,14 +1193,14 @@ public class DebugFloatGraph
 
 public class DebugText
 {
-    public string                   m_TextString;
-    public TextAnchor               m_TextAnchor;
-    public Vector3                  m_TextPosition;
-    public Quaternion               m_TextRotation;
-    public Color                    m_TextColor;
-    public float                    m_Size;
-    public float                    m_RemainLifeTime;
-    public bool                     m_Is2DText;
+    public string m_TextString;
+    public TextAnchor m_TextAnchor;
+    public Vector3 m_TextPosition;
+    public Quaternion m_TextRotation;
+    public Color m_TextColor;
+    public float m_Size;
+    public float m_RemainLifeTime;
+    public bool m_Is2DText;
 
     public DebugText()
     {
@@ -1211,14 +1208,14 @@ public class DebugText
 
     public DebugText(string Text, TextAnchor TextAnchor, Vector3 TextPosition, Quaternion TextRotation, Color Color, float Size, float LifeTime, bool Is2DText)
     {
-        m_TextString        = Text;
-        m_TextAnchor        = TextAnchor;
-        m_TextPosition      = TextPosition;
-        m_TextRotation      = TextRotation;
-        m_TextColor         = Color;
-        m_Size              = Size;
-        m_RemainLifeTime    = LifeTime;
-        m_Is2DText          = Is2DText;
+        m_TextString = Text;
+        m_TextAnchor = TextAnchor;
+        m_TextPosition = TextPosition;
+        m_TextRotation = TextRotation;
+        m_TextColor = Color;
+        m_Size = Size;
+        m_RemainLifeTime = LifeTime;
+        m_Is2DText = Is2DText;
     }
 
     // Get text anchored position
@@ -1274,4 +1271,5 @@ public class DebugText
         }
         return OriginPos;
     }
-}
+} 
+#endregion
