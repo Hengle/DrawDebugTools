@@ -49,7 +49,7 @@ public class DrawDebugToolsExample : MonoBehaviour {
         // Draw cylinder
         Vector3 CylinderStart = new Vector3(30.0f, 0.0f, 0.0f);
         Vector3 CylinderEnd = new Vector3(30.0f, 10.0f, 3.0f);
-        DrawDebugTools.DrawCylinder(CylinderStart, CylinderEnd, Quaternion.Euler(Rot), 1.0f, 12, Color.red);
+        DrawDebugTools.DrawCylinder(CylinderStart, CylinderEnd, 1.0f, 12, Color.red);
 
         // Draw cone
         Vector3 ConePosition = new Vector3(35.0f, 0.0f, 0.0f);
@@ -104,6 +104,9 @@ public class DrawDebugToolsExample : MonoBehaviour {
 
         // Draw Grid
         DrawDebugTools.DrawGrid(new Vector3(0.0f, 0.0f, 0.0f), GridSize, CellSize, 0.0f);
+
+        // Draw camera
+        DrawDebugTools.DrawActiveCamera(Color.cyan);
     }
 
     public float GridSize = 10.0f;
