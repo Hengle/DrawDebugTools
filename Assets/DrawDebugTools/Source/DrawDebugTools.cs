@@ -128,7 +128,6 @@ public class DrawDebugTools : MonoBehaviour
     #region ========== Update Function ==========
     private void Update()
     {
-
         HandleListOfLogMessagesList();
         HandleDebugCamera();
     } 
@@ -316,6 +315,10 @@ public class DrawDebugTools : MonoBehaviour
 
             // Set debug camera new far clip plane
             DrawDebugTools.Instance.m_DebugCamera.GetComponent<Camera>().farClipPlane = 10000.0f;
+
+            // Set cam flag
+            DrawDebugTools.Instance.m_DebugCamera.GetComponent<Camera>().clearFlags = DrawDebugTools.Instance.m_MainCamera.GetComponent<Camera>().clearFlags;
+            DrawDebugTools.Instance.m_DebugCamera.GetComponent<Camera>().backgroundColor = DrawDebugTools.Instance.m_MainCamera.GetComponent<Camera>().backgroundColor;
 
             // Set debug camera active flag
             DrawDebugTools.Instance.m_DebugCameraIsActive = true;
@@ -616,7 +619,7 @@ public class DrawDebugTools : MonoBehaviour
 
     public static void DrawString3D(Vector3 Position, Quaternion Rotation, string Text, TextAnchor Anchor, Color TextColor, float TextSize = 1.0f, float LifeTime = 0.0f)
     {
-        AddDebugText(Text, Anchor, Position, Rotation, TextColor, TextSize, LifeTime, false);
+        AddDebugText(Text, Anchor, Position, Rotation, TextColor, TextSize * 0.01f, LifeTime, false);
     }
 
     public static void DrawFrustum(Camera Camera, Color Color, float LifeTime = 0.0f)
@@ -698,7 +701,54 @@ public class DrawDebugTools : MonoBehaviour
 
     public static void DrawActiveCamera(Vector3 Position, Vector3 Rotation, Camera Camera, Color Color, float Scale = 1.0f, float LifeTime = 0.0f) { }
 
-    public static void DrawGrid(Vector3 Position) { }
+    public static void DrawGrid(Vector3 Position, float GridSize, float CellSize, float LifeTime = 0.0f)
+    {
+        Color MajorLinesColor = new Color(0.8f, 0.8f, 0.8f, 1.0f);
+        Color OtherLinesColor = new Color(0.6f, 0.6f, 0.6f, 1.0f);
+        float HalfGridSize = GridSize / 2.0f;
+        Quaternion GridRot = Quaternion.LookRotation(Vector3.up);
+
+        // Draw rectangle
+        InternalDrawLine(new Vector3(Position.x - HalfGridSize, Position.y - HalfGridSize, Position.z), 
+                        new Vector3(Position.x - HalfGridSize, Position.y + HalfGridSize, Position.z), 
+                        Position, GridRot, MajorLinesColor, LifeTime);
+
+        InternalDrawLine(new Vector3(Position.x - HalfGridSize, Position.y + HalfGridSize, Position.z),
+                        new Vector3(Position.x + HalfGridSize, Position.y + HalfGridSize, Position.z),
+                        Position, GridRot, MajorLinesColor, LifeTime);
+
+        InternalDrawLine(new Vector3(Position.x + HalfGridSize, Position.y + HalfGridSize, Position.z),
+                        new Vector3(Position.x + HalfGridSize, Position.y - HalfGridSize, Position.z),
+                        Position, GridRot, MajorLinesColor, LifeTime);
+
+        InternalDrawLine(new Vector3(Position.x + HalfGridSize, Position.y - HalfGridSize, Position.z),
+                        new Vector3(Position.x - HalfGridSize, Position.y - HalfGridSize, Position.z),
+                        Position, GridRot, MajorLinesColor, LifeTime);
+
+        // Draw centered axis
+        InternalDrawLine(new Vector3(Position.x - HalfGridSize, Position.y, Position.z),
+                new Vector3(Position.x + HalfGridSize, Position.y, Position.z),
+                Position, GridRot, new Color(0.8f, 0.3f, 0.3f, 1.0f), LifeTime);
+        InternalDrawLine(new Vector3(Position.x, Position.y - HalfGridSize, Position.z),
+                new Vector3(Position.x, Position.y + HalfGridSize, Position.z),
+                Position, GridRot, new Color(0.3f, 0.3f, 0.8f, 1.0f), LifeTime);
+
+        int CellNum = (int)Mathf.Ceil((GridSize / CellSize) / 2.0f) - 1;
+
+        // Draw grid lines
+        for (int i = -CellNum; i <= CellNum; i++)
+        {
+            if (i == 0) continue;
+            Vector3 V1 = new Vector3(Position.x + i * (CellSize), Position.y - HalfGridSize, Position.z);
+            Vector3 V2 = new Vector3(Position.x + i * (CellSize), Position.y + HalfGridSize, Position.z);
+            InternalDrawLine(V1, V2, Position, GridRot, OtherLinesColor, LifeTime);
+
+            V1 = new Vector3(Position.x - HalfGridSize, Position.y + i * (CellSize), Position.z);
+            V2 = new Vector3(Position.x + HalfGridSize, Position.y + i * (CellSize), Position.z);
+            InternalDrawLine(V1, V2, Position, GridRot, OtherLinesColor, LifeTime);
+        }
+
+    }
 
     public static void DrawDistance(Vector3 Start, Vector3 End, Color Color, float LifeTime = 0.0f)
     {

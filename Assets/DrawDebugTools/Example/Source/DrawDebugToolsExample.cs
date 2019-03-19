@@ -78,32 +78,36 @@ public class DrawDebugToolsExample : MonoBehaviour {
             RotationText = Quaternion.LookRotation((new Vector3(0.0f, 30.0f, 0.0f) - Camera.main.transform.position).normalized);
 
         }
-        DrawDebugTools.DrawString3D(new Vector3(0.0f, 0.0f, 0.0f), Quaternion.Euler(Rot), "HELLO TEXT WORLD", anchof, Color.green, 0.01f, 0.0f);
+        DrawDebugTools.DrawString3D(new Vector3(0.0f, 0.0f, 0.0f), Quaternion.Euler(Rot), "HELLO TEXT WORLD", anchof, Color.green, 1.0f, 0.0f);
 
         // Draw float debug
         if (Input.GetKey(KeyCode.W)) m += 500.0f * Time.deltaTime;
         if (Input.GetKey(KeyCode.S)) m -= 500.0f * Time.deltaTime;
 
-        DrawDebugTools.DrawFloatGraph("Sin Value * 2", SinValue * 2.0f, 6.0f, true, FloatSamplesCount);
-        DrawDebugTools.DrawFloatGraph("Sin Value", SinValue, 6.0f, false, FloatSamplesCount);
-        DrawDebugTools.DrawFloatGraph("m Value", m, 1000.0f, false, FloatSamplesCount);
-        DrawDebugTools.DrawFloatGraph("Sin Value 1", SinValue, 6.0f, false, FloatSamplesCount);
-        DrawDebugTools.DrawFloatGraph("Sin Value 2", SinValue, 6.0f, false, FloatSamplesCount);
-        DrawDebugTools.DrawFloatGraph("Sin Value 3", SinValue, 6.0f, false, FloatSamplesCount);
-        DrawDebugTools.DrawFloatGraph("Sin Value 4", SinValue, 6.0f, false, FloatSamplesCount);
+        //DrawDebugTools.DrawFloatGraph("Sin Value * 2", SinValue * 2.0f, 6.0f, true, FloatSamplesCount);
+        //DrawDebugTools.DrawFloatGraph("Sin Value", SinValue, 6.0f, false, FloatSamplesCount);
+        //DrawDebugTools.DrawFloatGraph("m Value", m, 1000.0f, false, FloatSamplesCount);
+        //DrawDebugTools.DrawFloatGraph("Sin Value 1", SinValue, 6.0f, false, FloatSamplesCount);
+        //DrawDebugTools.DrawFloatGraph("Sin Value 2", SinValue, 6.0f, false, FloatSamplesCount);
+        //DrawDebugTools.DrawFloatGraph("Sin Value 3", SinValue, 6.0f, false, FloatSamplesCount);
+        //DrawDebugTools.DrawFloatGraph("Sin Value 4", SinValue, 6.0f, false, FloatSamplesCount);
 
         // Draw distance
         DrawDebugTools.DrawDistance(new Vector3(-10.0f, 0.0f, 0.0f), MovingSpherePos, Color.green, 0.0f);
 
         // Log
         DrawDebugTools.Log("Hello world - " + Time.deltaTime, Color.green, 1.0f);
-        
-
         if (Input.GetMouseButtonDown(0))
         {
             DrawDebugTools.Log("Hello Click", Color.red, 4.0f);
         }
+
+        // Draw Grid
+        DrawDebugTools.DrawGrid(new Vector3(0.0f, 0.0f, 0.0f), GridSize, CellSize, 0.0f);
     }
+
+    public float GridSize = 10.0f;
+    public float CellSize = 1.0f;
 
     float m = 0.0f;
     public Vector3 TextPos=new Vector3(10.0f, 100.0f, 0.0f);
