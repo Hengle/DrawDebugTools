@@ -718,7 +718,7 @@ public class DrawDebugTools : MonoBehaviour
         if (Camera == null) return;
 
         float CamBoxDepth = 0.4f;
-        float CamBoxHeight = 0.23f;
+        float CamBoxHeight = 0.3f;
         float CamBoxWidth = 0.2f;
         float CamCylRadius = 0.25f;
         float CamCylDistance = 0.55f;
@@ -748,16 +748,16 @@ public class DrawDebugTools : MonoBehaviour
         InternalDrawLine(Center + new Vector3(-Extent.x, Extent.y, 0.0f), Center + new Vector3(Extent.x, Extent.y, 0.0f), CamPos, CamRot, Color, LifeTime);
 
         float ZoomDepth = CamBoxDepth;
-        float ZoomSize = 3.0f;
-        InternalDrawLine(Center + new Vector3(Extent.x * ZoomSize, Extent.y * ZoomSize, ZoomDepth), Center + new Vector3(Extent.x * ZoomSize, -Extent.y * ZoomSize, ZoomDepth), CamPos, CamRot, Color, LifeTime);
-        InternalDrawLine(Center + new Vector3(Extent.x * ZoomSize, -Extent.y * ZoomSize, ZoomDepth), Center + new Vector3(-Extent.x * ZoomSize, -Extent.y * ZoomSize, ZoomDepth), CamPos, CamRot, Color, LifeTime);
-        InternalDrawLine(Center + new Vector3(-Extent.x * ZoomSize, -Extent.y * ZoomSize, ZoomDepth), Center + new Vector3(-Extent.x * ZoomSize, Extent.y * ZoomSize, ZoomDepth), CamPos, CamRot, Color, LifeTime);
-        InternalDrawLine(Center + new Vector3(-Extent.x * ZoomSize, Extent.y * ZoomSize, ZoomDepth), Center + new Vector3(Extent.x * ZoomSize, Extent.y * ZoomSize, ZoomDepth), CamPos, CamRot, Color, LifeTime);
+        float v = 3.0f;
+        InternalDrawLine(Center + new Vector3(Extent.x * v, Extent.y * v, ZoomDepth), Center + new Vector3(Extent.x * v, -Extent.y * v, ZoomDepth), CamPos, CamRot, Color, LifeTime);
+        InternalDrawLine(Center + new Vector3(Extent.x * v, -Extent.y * v, ZoomDepth), Center + new Vector3(-Extent.x * v, -Extent.y * v, ZoomDepth), CamPos, CamRot, Color, LifeTime);
+        InternalDrawLine(Center + new Vector3(-Extent.x * v, -Extent.y * v, ZoomDepth), Center + new Vector3(-Extent.x * v, Extent.y * v, ZoomDepth), CamPos, CamRot, Color, LifeTime);
+        InternalDrawLine(Center + new Vector3(-Extent.x * v, Extent.y * v, ZoomDepth), Center + new Vector3(Extent.x * v, Extent.y * v, ZoomDepth), CamPos, CamRot, Color, LifeTime);
 
-        InternalDrawLine(Center + new Vector3(Extent.x, Extent.y, 0.0f), Center + new Vector3(Extent.x * ZoomSize, Extent.y * ZoomSize, ZoomDepth), CamPos, CamRot, Color, LifeTime);
-        InternalDrawLine(Center + new Vector3(Extent.x, -Extent.y, 0.0f), Center + new Vector3(Extent.x * ZoomSize, -Extent.y * ZoomSize, ZoomDepth), CamPos, CamRot, Color, LifeTime);
-        InternalDrawLine(Center + new Vector3(-Extent.x, -Extent.y, 0.0f), Center + new Vector3(-Extent.x * ZoomSize, -Extent.y * ZoomSize, ZoomDepth), CamPos, CamRot, Color, LifeTime);
-        InternalDrawLine(Center + new Vector3(-Extent.x, Extent.y, 0.0f), Center + new Vector3(-Extent.x * ZoomSize, Extent.y * ZoomSize, ZoomDepth), CamPos, CamRot, Color, LifeTime);
+        InternalDrawLine(Center + new Vector3(Extent.x, Extent.y, 0.0f), Center + new Vector3(Extent.x * v, Extent.y * v, ZoomDepth), CamPos, CamRot, Color, LifeTime);
+        InternalDrawLine(Center + new Vector3(Extent.x, -Extent.y, 0.0f), Center + new Vector3(Extent.x * v, -Extent.y * v, ZoomDepth), CamPos, CamRot, Color, LifeTime);
+        InternalDrawLine(Center + new Vector3(-Extent.x, -Extent.y, 0.0f), Center + new Vector3(-Extent.x * v, -Extent.y * v, ZoomDepth), CamPos, CamRot, Color, LifeTime);
+        InternalDrawLine(Center + new Vector3(-Extent.x, Extent.y, 0.0f), Center + new Vector3(-Extent.x * v, Extent.y * v, ZoomDepth), CamPos, CamRot, Color, LifeTime);
     }
 
     public static void DrawGrid(Vector3 Position, float GridSize, float CellSize, float LifeTime)
@@ -827,7 +827,7 @@ public class DrawDebugTools : MonoBehaviour
         InternalDrawLine(Start - RightDir * DistEndSize, Start + RightDir * DistEndSize, DistTextPos, Quaternion.identity, Color, LifeTime);
         InternalDrawLine(End - RightDir * DistEndSize, End + RightDir * DistEndSize, DistTextPos, Quaternion.identity, Color, LifeTime);
 
-        DrawDebugTools.DrawString3D(DistTextPos, Quaternion.LookRotation(Camera.main.transform.position - DistTextPos), Dist.ToString(".00"), TextAnchor.MiddleCenter, Color.white, 1.0f, LifeTime);
+        DrawDebugTools.DrawString3D(DistTextPos, Quaternion.LookRotation(Camera.main.transform.position - DistTextPos), Dist.ToString(".00"), TextAnchor.MiddleCenter, Color.white, 0.01f, LifeTime);
     }
 
     public static void Log(string LogMessage, Color Color, float LifeTime = 0.0f)
