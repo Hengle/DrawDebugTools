@@ -96,7 +96,7 @@ public class DrawDebugToolsExample : MonoBehaviour {
         DrawDebugTools.DrawDistance(new Vector3(-10.0f, 0.0f, 0.0f), MovingSpherePos, Color.green, 0.0f);
 
         // Log
-        DrawDebugTools.Log("Hello world - " + Time.deltaTime, Color.green, 1.0f);
+        DrawDebugTools.Log("Hello world, this is a log message on screen - " + Time.timeSinceLevelLoad, Color.green, 1.0f);
         if (Input.GetMouseButtonDown(0))
         {
             DrawDebugTools.Log("Hello Click", Color.red, 4.0f);

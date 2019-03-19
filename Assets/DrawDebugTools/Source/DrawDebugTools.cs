@@ -701,12 +701,17 @@ public class DrawDebugTools : MonoBehaviour
 
     public static void DrawActiveCamera(Vector3 Position, Vector3 Rotation, Camera Camera, Color Color, float Scale = 1.0f, float LifeTime = 0.0f) { }
 
-    public static void DrawGrid(Vector3 Position, float GridSize, float CellSize, float LifeTime = 0.0f)
+    public static void DrawGrid(Vector3 Position, float GridSize, float CellSize, float LifeTime)
+    {
+        DrawGrid(Position, Vector3.up, GridSize, CellSize, LifeTime);
+    }
+
+    public static void DrawGrid(Vector3 Position, Vector3 Normal, float GridSize, float CellSize, float LifeTime = 0.0f)
     {
         Color MajorLinesColor = new Color(0.8f, 0.8f, 0.8f, 1.0f);
         Color OtherLinesColor = new Color(0.6f, 0.6f, 0.6f, 1.0f);
         float HalfGridSize = GridSize / 2.0f;
-        Quaternion GridRot = Quaternion.LookRotation(Vector3.up);
+        Quaternion GridRot = Quaternion.LookRotation(Normal);
 
         // Draw rectangle
         InternalDrawLine(new Vector3(Position.x - HalfGridSize, Position.y - HalfGridSize, Position.z), 
