@@ -773,7 +773,7 @@ public class DrawDebugTools : MonoBehaviour
 
     public static void Log(string LogMessage, Color Color, float LifeTime = 0.0f)
     {
-        DrawDebugTools.Instance.m_LogMessagesList.Add(new DebugLogMessage(LogMessage, Color, LifeTime));
+        DrawDebugTools.Instance.m_LogMessagesList.Insert(0, new DebugLogMessage(LogMessage, Color, LifeTime));
     }
 
     private static void AddDebugText(string Text, TextAnchor Anchor, Vector3 Position, Quaternion Rotation, Color Color, float Size, float LifeTime, bool Is2DText)
@@ -805,7 +805,6 @@ public class DrawDebugTools : MonoBehaviour
             Instance.m_FloatGraphsList.Add(new DebugFloatGraph(UniqueGraphName, SamplesCount, GraphHalfMinMaxRange, AutoAdjustMinMaxRange, TimeBeforeRemoveInactiveGraph));
         }
     }
-
     #endregion
 
     #region ========== Handle Drawing Lines/Quads ==========
@@ -1126,7 +1125,7 @@ public class DrawDebugTools : MonoBehaviour
     {
         Vector3 OriginPosition = new Vector3(m_LogMessageMarginLeft, Screen.height - m_LogMessageMarginTop, 0.0f);
 
-        for (int i = 0; i < m_LogMessagesList.Count; i++)
+        for (int i = m_LogMessagesList.Count-1; i >= 0; i--)
         {
             Vector3 LogPosition = OriginPosition - new Vector3(0.0f, m_LineSpacing * i, 0.0f);
             if (LogPosition.y > 0.0f)

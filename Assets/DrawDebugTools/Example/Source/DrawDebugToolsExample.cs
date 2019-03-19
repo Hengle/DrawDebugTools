@@ -6,7 +6,7 @@ public class DrawDebugToolsExample : MonoBehaviour {
 	private void Start () {
         //DrawDebugTools.DrawDebugString3D(TextPos, "Hello world", anchof, Color.green, 0.0f);
 
-        DrawDebugTools.Log("Text in Start function" , Color.green, 5.0f);
+        DrawDebugTools.Log("Text in Start function" , Color.green, 10.0f);
     }
 
     public Vector3 Rot = Vector3.zero;
@@ -99,7 +99,7 @@ public class DrawDebugToolsExample : MonoBehaviour {
         DrawDebugTools.Log("Hello world, this is a log message on screen - " + Time.timeSinceLevelLoad, Color.green, 1.0f);
         if (Input.GetMouseButtonDown(0))
         {
-            DrawDebugTools.Log("Hello Click", Color.red, 4.0f);
+            DrawDebugTools.Log("Hello Click" + Time.timeSinceLevelLoad, Color.red, 4.0f);
         }
 
         // Draw Grid
