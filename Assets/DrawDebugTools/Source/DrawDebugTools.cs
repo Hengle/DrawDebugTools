@@ -29,8 +29,8 @@ public class DrawDebugTools : MonoBehaviour
     private bool                    m_DebugCameraIsActive = false;
     private float                   m_DebugCameraPitch = 0.0f;
     private float                   m_DebugCameraYaw = 0.0f;
-    private float                   m_DebugCameraMovSpeedMultiplier = 1.0f;
-    private Vector2                 m_DebugCameraMovSpeedMultiplierRange = new Vector2(0.05f, 10.0f);
+    private float                   m_DebugCameraMovSpeedMultiplier = 0.1f;
+    private Vector2                 m_DebugCameraMovSpeedMultiplierRange = new Vector2(0.01f, 10.0f);
 
     // Debug float 
     private List<DebugFloatGraph>   m_FloatGraphsList;
