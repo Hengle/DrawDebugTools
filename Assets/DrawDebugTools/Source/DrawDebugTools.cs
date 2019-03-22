@@ -90,12 +90,15 @@ public class DrawDebugTools : MonoBehaviour
             //Turn on alpha blending
             m_LineMaterial.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
             m_LineMaterial.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            m_LineMaterial.SetOverrideTag("ZWrite", "On");
+            m_LineMaterial.SetOverrideTag("ZTest", "LEqual");
 
             //Turn backface culling off
             m_LineMaterial.SetInt("_Cull", (int)UnityEngine.Rendering.CullMode.Off);
-
+            
             //Turn off depth writes
             m_LineMaterial.SetInt("_ZWrite", 0);
+            
 
             Shader = Shader.Find("Hidden/Internal-GUITexture");
             m_AlphaMaterial = new Material(Shader);
@@ -113,12 +116,18 @@ public class DrawDebugTools : MonoBehaviour
             m_AlphaMaterial.SetInt("_ZWrite", 0);
         }
     }
+
     #endregion
 
-    #region ========== OnPostRender Function ==========
-    private IEnumerator OnPostRender()
+    #region ========== OnPostRender Function ==========    
+    private void OnPostRender()
     {
-        yield return new WaitForEndOfFrame();
+        if(!m_DebugCameraIsActive)
+            Draw();        
+    }
+
+    public void Draw()
+    {
         HandleDrawingListOfLines();
         HandleDrawingListOfTextes();
         HandleDrawingListOfFloatGraphs();
@@ -313,6 +322,8 @@ public class DrawDebugTools : MonoBehaviour
                 }
             }
 
+            DrawDebugTools.Instance.m_DebugCamera.AddComponent<DebugCamera>();
+
             // Set debug camera new far clip plane
             DrawDebugTools.Instance.m_DebugCamera.GetComponent<Camera>().farClipPlane = 10000.0f;
 
@@ -322,6 +333,8 @@ public class DrawDebugTools : MonoBehaviour
 
             // Set debug camera active flag
             DrawDebugTools.Instance.m_DebugCameraIsActive = true;
+
+            
         }
     } 
     #endregion
@@ -1224,7 +1237,7 @@ public class DrawDebugTools : MonoBehaviour
 }
 
 
-#region ========== Enums And Structures ==========
+#region ========== Enums / Structures / Helper Classes ==========
 public class BatchedLine
 {
     public Vector3 Start;
@@ -1440,5 +1453,13 @@ public class DebugText
         }
         return OriginPos;
     }
-} 
+}
+
+public class DebugCamera : MonoBehaviour
+{
+    private void OnPostRender()
+    {
+        DrawDebugTools.Instance.Draw();
+    }
+}
 #endregion
