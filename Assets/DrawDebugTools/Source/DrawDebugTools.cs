@@ -341,11 +341,28 @@ public class DrawDebugTools : MonoBehaviour
     #endregion
 
     #region ========== Drawing Functions ==========
+    /// <summary>
+    /// Call this method to draw a wire sphere
+    /// </summary>
+    /// <param name="Center">Position of the sphere</param>
+    /// <param name="Radius">Raduis of the sphere</param>
+    /// <param name="Segments">Segments count that form the sphere</param>
+    /// <param name="Color">Color of the sphere</param>
+    /// <param name="LifeTime">Lifetime before stop drawing the sphere</param>
     public static void DrawSphere(Vector3 Center, float Radius, int Segments, Color Color, float LifeTime = 0.0f)
     {
         DrawSphere(Center, Quaternion.identity, Radius, Segments, Color, LifeTime = 0.0f);
     }
 
+    /// <summary>
+    /// Call this method to draw a wire sphere
+    /// </summary>
+    /// <param name="Center">Position of the sphere</param>
+    /// <param name="Rotation"></param>
+    /// <param name="Radius">Raduis of the sphere</param>
+    /// <param name="Segments">Segments count that form the sphere</param>
+    /// <param name="Color">Color of the sphere</param>
+    /// <param name="LifeTime">Lifetime before stop drawing the sphere</param>
     public static void DrawSphere(Vector3 Center, Quaternion Rotation, float Radius, int Segments, Color Color, float LifeTime = 0.0f)
     {
         Segments = Mathf.Max(Segments, 4);
@@ -1094,7 +1111,6 @@ public class DrawDebugTools : MonoBehaviour
             AddDebugText(FloatGraphsArray[i].m_GraphValueLengh.ToString(), TextAnchor.UpperLeft, OriginPosition + new Vector3(2.0f, m_GraphHeight, 0.0f), Quaternion.identity, Color.white * new Color(1.0f, 1.0f, 1.0f, m_GraphTextAlpha), 1.0f, 0.0f, true);
             AddDebugText((-FloatGraphsArray[i].m_GraphValueLengh).ToString(), TextAnchor.LowerLeft, OriginPosition + new Vector3(2.0f, 2.0f, 0.0f), Quaternion.identity, Color.white * new Color(1.0f, 1.0f, 1.0f, m_GraphTextAlpha), 1.0f, 0.0f, true);
 
-
             // Draw bg points
             GL.TexCoord2(0.0f, 0.0f);
             GL.Vertex(OriginPosition);
@@ -1182,6 +1198,10 @@ public class DrawDebugTools : MonoBehaviour
         }
         GL.End();
         GL.PopMatrix();
+
+        float FloatValuew = 3.0f;
+        AddDebugText((FloatValuew).ToString(".000"), FloatValuew >= 0.0f ? TextAnchor.UpperRight : TextAnchor.LowerRight, new Vector3(OriginPosition.x + m_GraphWidth,  OriginPosition.y , 0.0f), Quaternion.identity, Color.white * new Color(1.0f, 1.0f, 1.0f, 1.0f), 1.0f, 0.0f, true);
+        AddDebugText("999", TextAnchor.LowerRight, new Vector3(OriginPosition.x + m_GraphWidth, OriginPosition.y, 0.0f), Quaternion.identity, Color.white * new Color(1.0f, 1.0f, 1.0f, 1.0f), 1.0f, 0.0f, true);
 
         // Update text life time
         for (int i = m_FloatGraphsList.Count - 1; i >= 0; i--)
@@ -1429,7 +1449,7 @@ public class DebugText
                 OriginPos += new Vector3(TextWidth / 2.0f, -TextHeight, 0.0f);
                 break;
             case TextAnchor.UpperRight:
-                OriginPos += new Vector3(TextWidth, -TextHeight, 0.0f);
+                OriginPos += new Vector3(-TextWidth, -TextHeight, 0.0f);
                 break;
             case TextAnchor.MiddleLeft:
                 OriginPos += new Vector3(0.0f, -TextHeight / 2.0f, 0.0f);
@@ -1438,7 +1458,7 @@ public class DebugText
                 OriginPos += new Vector3(TextWidth / 2.0f, -TextHeight / 2.0f, 0.0f);
                 break;
             case TextAnchor.MiddleRight:
-                OriginPos += new Vector3(TextWidth, -TextHeight / 2.0f, 0.0f);
+                OriginPos += new Vector3(-TextWidth, -TextHeight / 2.0f, 0.0f);
                 break;
             case TextAnchor.LowerLeft:
                 // Default position
@@ -1447,7 +1467,7 @@ public class DebugText
                 OriginPos += new Vector3(TextWidth / 2.0f, 0.0f, 0.0f);
                 break;
             case TextAnchor.LowerRight:
-                OriginPos += new Vector3(TextWidth, 0.0f, 0.0f);
+                OriginPos += new Vector3(-TextWidth, 0.0f, 0.0f);
                 break;
             default:
                 break;
