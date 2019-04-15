@@ -334,7 +334,8 @@ public class DrawDebugTools : MonoBehaviour
             // Set debug camera active flag
             DrawDebugTools.Instance.m_DebugCameraIsActive = true;
 
-            
+            // Set time scale to 0
+            Time.timeScale = 0.0f;
         }
     } 
     #endregion
@@ -840,7 +841,7 @@ public class DrawDebugTools : MonoBehaviour
         InternalDrawLine(Start - RightDir * DistEndSize, Start + RightDir * DistEndSize, DistTextPos, Quaternion.identity, Color, LifeTime);
         InternalDrawLine(End - RightDir * DistEndSize, End + RightDir * DistEndSize, DistTextPos, Quaternion.identity, Color, LifeTime);
 
-        DrawDebugTools.DrawString3D(DistTextPos, Quaternion.LookRotation(Camera.main.transform.position - DistTextPos), Dist.ToString(".00"), TextAnchor.MiddleCenter, Color.white, 0.01f, LifeTime);
+        DrawDebugTools.DrawString3D(DistTextPos, Quaternion.LookRotation(Camera.main.transform.position - DistTextPos), Dist.ToString(".00"), TextAnchor.MiddleCenter, Color.white, 1.0f, LifeTime);
     }
 
     public static void Log(string LogMessage, Color Color, float LifeTime = 0.0f)
