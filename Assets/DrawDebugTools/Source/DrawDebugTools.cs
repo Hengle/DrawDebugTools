@@ -6,10 +6,10 @@ using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 
-public class DrawDebugTools : MonoBehaviour
+public class DDT : MonoBehaviour
 {
     #region ========== Variables ==========
-    public static DrawDebugTools    Instance;
+    public static DDT    Instance;
 
     // Lines
     private List<BatchedLine>       m_BatchedLines;
@@ -287,52 +287,52 @@ public class DrawDebugTools : MonoBehaviour
 
     public static void ToggleDebugCamera()
     {
-        if (DrawDebugTools.Instance.m_DebugCameraIsActive)
+        if (DDT.Instance.m_DebugCameraIsActive)
         {
             // Delete debug camera 
-            Destroy(DrawDebugTools.Instance.m_DebugCamera);
-            DrawDebugTools.Instance.m_MainCamera.tag = "MainCamera";
-            DrawDebugTools.Instance.m_DebugCameraIsActive = false;
+            Destroy(DDT.Instance.m_DebugCamera);
+            DDT.Instance.m_MainCamera.tag = "MainCamera";
+            DDT.Instance.m_DebugCameraIsActive = false;
         }
         else
         {
             // Create debug camera
-            DrawDebugTools.Instance.m_MainCamera = Camera.main.gameObject;
-            DrawDebugTools.Instance.m_DebugCamera = new GameObject("DebugCamera");
-            DrawDebugTools.Instance.m_DebugCamera.transform.position = Camera.main.transform.position;
-            DrawDebugTools.Instance.m_DebugCamera.transform.rotation = Camera.main.transform.rotation;
-            DrawDebugTools.Instance.m_DebugCamera.transform.localScale = Camera.main.transform.localScale;
+            DDT.Instance.m_MainCamera = Camera.main.gameObject;
+            DDT.Instance.m_DebugCamera = new GameObject("DebugCamera");
+            DDT.Instance.m_DebugCamera.transform.position = Camera.main.transform.position;
+            DDT.Instance.m_DebugCamera.transform.rotation = Camera.main.transform.rotation;
+            DDT.Instance.m_DebugCamera.transform.localScale = Camera.main.transform.localScale;
 
             // Set debug initial camera pitch & yaw rotation value
-            DrawDebugTools.Instance.m_DebugCameraPitch = DrawDebugTools.Instance.m_MainCamera.transform.eulerAngles.x;
-            DrawDebugTools.Instance.m_DebugCameraYaw = DrawDebugTools.Instance.m_MainCamera.transform.eulerAngles.y;
+            DDT.Instance.m_DebugCameraPitch = DDT.Instance.m_MainCamera.transform.eulerAngles.x;
+            DDT.Instance.m_DebugCameraYaw = DDT.Instance.m_MainCamera.transform.eulerAngles.y;
 
             // Switch cameras tag
-            DrawDebugTools.Instance.m_MainCamera.tag = "Untagged";
-            DrawDebugTools.Instance.m_DebugCamera.tag = "MainCamera";
+            DDT.Instance.m_MainCamera.tag = "Untagged";
+            DDT.Instance.m_DebugCamera.tag = "MainCamera";
 
             // Set components
-            Component[] ComponentsArray = DrawDebugTools.Instance.m_MainCamera.GetComponents(typeof(Component));
+            Component[] ComponentsArray = DDT.Instance.m_MainCamera.GetComponents(typeof(Component));
             System.Type[] CompsToInclude = new System.Type[] { typeof(Transform), typeof(Camera) };
             for (int i = 0; i < ComponentsArray.Length; i++)
             {
                 if (CompsToInclude.Contains(ComponentsArray[i].GetType()))
                 {
-                    DrawDebugTools.Instance.m_DebugCamera.AddComponent(ComponentsArray[i].GetType());
+                    DDT.Instance.m_DebugCamera.AddComponent(ComponentsArray[i].GetType());
                 }
             }
 
-            DrawDebugTools.Instance.m_DebugCamera.AddComponent<DebugCamera>();
+            DDT.Instance.m_DebugCamera.AddComponent<DebugCamera>();
 
             // Set debug camera new far clip plane
-            DrawDebugTools.Instance.m_DebugCamera.GetComponent<Camera>().farClipPlane = 10000.0f;
+            DDT.Instance.m_DebugCamera.GetComponent<Camera>().farClipPlane = 10000.0f;
 
             // Set cam flag
-            DrawDebugTools.Instance.m_DebugCamera.GetComponent<Camera>().clearFlags = DrawDebugTools.Instance.m_MainCamera.GetComponent<Camera>().clearFlags;
-            DrawDebugTools.Instance.m_DebugCamera.GetComponent<Camera>().backgroundColor = DrawDebugTools.Instance.m_MainCamera.GetComponent<Camera>().backgroundColor;
+            DDT.Instance.m_DebugCamera.GetComponent<Camera>().clearFlags = DDT.Instance.m_MainCamera.GetComponent<Camera>().clearFlags;
+            DDT.Instance.m_DebugCamera.GetComponent<Camera>().backgroundColor = DDT.Instance.m_MainCamera.GetComponent<Camera>().backgroundColor;
 
             // Set debug camera active flag
-            DrawDebugTools.Instance.m_DebugCameraIsActive = true;
+            DDT.Instance.m_DebugCameraIsActive = true;
 
             // Set time scale to 0
             Time.timeScale = 0.0f;
@@ -412,12 +412,12 @@ public class DrawDebugTools : MonoBehaviour
             }
         }
 
-        DrawDebugTools.Instance.m_BatchedLines.AddRange(Lines);
+        DDT.Instance.m_BatchedLines.AddRange(Lines);
     }
 
     public static void DrawLine(Vector3 LineStart, Vector3 LineEnd, Color Color, float LifeTime = 0.0f)
     {
-        DrawDebugTools.Instance.m_BatchedLines.Add(new BatchedLine(LineStart, LineEnd, Vector3.zero, Quaternion.identity, Color, LifeTime));
+        DDT.Instance.m_BatchedLines.Add(new BatchedLine(LineStart, LineEnd, Vector3.zero, Quaternion.identity, Color, LifeTime));
     }
 
     public static void DrawPoint(Vector3 Position, float Size, Color Color, float LifeTime = 0.0f)
@@ -615,7 +615,7 @@ public class DrawDebugTools : MonoBehaviour
 
     public static void DrawFrustum(Camera Camera, Color Color, float LifeTime = 0.0f)
     {
-        Plane[] FrustumPlanes = DrawDebugTools.Instance.m_DebugCameraIsActive ? GeometryUtility.CalculateFrustumPlanes(DrawDebugTools.Instance.m_MainCamera.GetComponent<Camera>()) : GeometryUtility.CalculateFrustumPlanes(Camera);
+        Plane[] FrustumPlanes = DDT.Instance.m_DebugCameraIsActive ? GeometryUtility.CalculateFrustumPlanes(DDT.Instance.m_MainCamera.GetComponent<Camera>()) : GeometryUtility.CalculateFrustumPlanes(Camera);
         Vector3[] NearPlaneCorners = new Vector3[4];
         Vector3[] FarePlaneCorners = new Vector3[4];
 
@@ -667,8 +667,8 @@ public class DrawDebugTools : MonoBehaviour
     public static void DrawActiveCamera(Color Color, float Scale = 1.0f, float LifeTime = 0.0f)
     {
         Camera ActiveCam = Camera.main;
-        if (DrawDebugTools.Instance.m_DebugCameraIsActive)
-            ActiveCam = DrawDebugTools.Instance.m_MainCamera.GetComponent<Camera>();
+        if (DDT.Instance.m_DebugCameraIsActive)
+            ActiveCam = DDT.Instance.m_MainCamera.GetComponent<Camera>();
         InternalDrawCamera(ActiveCam, Color, Scale, LifeTime);
     }
 
@@ -739,12 +739,12 @@ public class DrawDebugTools : MonoBehaviour
         InternalDrawLine(Start - RightDir * DistEndSize, Start + RightDir * DistEndSize, DistTextPos, Quaternion.identity, Color, LifeTime);
         InternalDrawLine(End - RightDir * DistEndSize, End + RightDir * DistEndSize, DistTextPos, Quaternion.identity, Color, LifeTime);
 
-        DrawDebugTools.DrawString3D(DistTextPos, Quaternion.LookRotation(Camera.main.transform.position - DistTextPos), Dist.ToString(".00"), TextAnchor.MiddleCenter, Color.white, 1.0f, LifeTime);
+        DDT.DrawString3D(DistTextPos, Quaternion.LookRotation(Camera.main.transform.position - DistTextPos), Dist.ToString(".00"), TextAnchor.MiddleCenter, Color.white, 1.0f, LifeTime);
     }
 
     public static void Log(string LogMessage, Color Color, float LifeTime = 0.0f)
     {
-        DrawDebugTools.Instance.m_LogMessagesList.Insert(0, new DebugLogMessage(LogMessage, Color, LifeTime));
+        DDT.Instance.m_LogMessagesList.Insert(0, new DebugLogMessage(LogMessage, Color, LifeTime));
     }
     
     public static void DrawFloatGraph(string UniqueGraphName, float FloatValueToDebug, float GraphHalfMinMaxRange = 100.0f, bool AutoAdjustMinMaxRange = false, int SamplesCount = 50)
@@ -753,7 +753,7 @@ public class DrawDebugTools : MonoBehaviour
         int FloatIndex = -1;
         float TimeBeforeRemoveInactiveGraph = 2.0f;
 
-        for (int i = 0; i < DrawDebugTools.Instance.m_FloatGraphsList.Count; i++)
+        for (int i = 0; i < DDT.Instance.m_FloatGraphsList.Count; i++)
         {
             if (Instance.m_FloatGraphsList[i].m_UniqueFloatName == UniqueGraphName)
             {
@@ -775,7 +775,7 @@ public class DrawDebugTools : MonoBehaviour
     #region Private Internal Functions
     private static void InternalDrawLine(Vector3 LineStart, Vector3 LineEnd, Vector3 Center, Quaternion Rotation, Color Color, float LifeTime = 0.0f)
     {
-        DrawDebugTools.Instance.m_BatchedLines.Add(new BatchedLine(LineStart, LineEnd, Center, Rotation, Color, LifeTime));
+        DDT.Instance.m_BatchedLines.Add(new BatchedLine(LineStart, LineEnd, Center, Rotation, Color, LifeTime));
     }
 
     private static void InternalDrawCapsuleCircle(Vector3 Base, Vector3 X, Vector3 Z, Color Color, float Radius, int Segments, float LifeTime = 0.0f)
@@ -881,7 +881,7 @@ public class DrawDebugTools : MonoBehaviour
 
     private static void InternalAddDebugText(string Text, TextAnchor Anchor, Vector3 Position, Quaternion Rotation, Color Color, float Size, float LifeTime, bool Is2DText)
     {
-        DrawDebugTools.Instance.m_DebugTextesList.Add(new DebugText(Text, Anchor, Position, Rotation, Color, Size, LifeTime, Is2DText));
+        DDT.Instance.m_DebugTextesList.Add(new DebugText(Text, Anchor, Position, Rotation, Color, Size, LifeTime, Is2DText));
     }
 
     private static void InternalDrawHalfCircle(Vector3 Base, Vector3 X, Vector3 Z, Color Color, float Radius, int Segments, float LifeTime = 0.0f)
@@ -1081,7 +1081,7 @@ public class DrawDebugTools : MonoBehaviour
     private void HandleDrawingListOfFloatGraphs()
     {
         Vector3 OriginPosition = Vector3.zero;
-        DebugFloatGraph[] FloatGraphsArray = DrawDebugTools.Instance.m_FloatGraphsList.ToArray();
+        DebugFloatGraph[] FloatGraphsArray = DDT.Instance.m_FloatGraphsList.ToArray();
 
         // Draw background
         GL.PushMatrix();
@@ -1163,7 +1163,7 @@ public class DrawDebugTools : MonoBehaviour
             GL.Vertex(new Vector3(OriginPosition.x + m_GraphWidth, OriginPosition.y + m_GraphHeight / 2.0f));
 
             // Draw curve
-            if (DrawDebugTools.Instance.m_FloatGraphsList[i].m_FloatValuesList.Count > 0)
+            if (DDT.Instance.m_FloatGraphsList[i].m_FloatValuesList.Count > 0)
             {
                 GL.Color(new Color(1.0f, 1.0f, 0.2f, 0.9f));
 
@@ -1173,16 +1173,16 @@ public class DrawDebugTools : MonoBehaviour
                 float X;
                 float Y;
 
-                for (int j = 0; j < DrawDebugTools.Instance.m_FloatGraphsList[i].m_FloatValuesList.Count; j++)
+                for (int j = 0; j < DDT.Instance.m_FloatGraphsList[i].m_FloatValuesList.Count; j++)
                 {
                     if (j == 0)
                     {
-                        FloatValue = DrawDebugTools.Instance.m_FloatGraphsList[i].m_FloatValuesList[j];
+                        FloatValue = DDT.Instance.m_FloatGraphsList[i].m_FloatValuesList[j];
                         LineStart = OriginPosition + new Vector3(0.0f, Mathf.Clamp(OffsetY + FloatValue * GraphStepY, 0.0f, m_GraphHeight), 0.0f);
                     }
 
-                    if (j < DrawDebugTools.Instance.m_FloatGraphsList[i].m_FloatValuesList.Count - 1)
-                        FloatValue = DrawDebugTools.Instance.m_FloatGraphsList[i].m_FloatValuesList[j + 1];
+                    if (j < DDT.Instance.m_FloatGraphsList[i].m_FloatValuesList.Count - 1)
+                        FloatValue = DDT.Instance.m_FloatGraphsList[i].m_FloatValuesList[j + 1];
 
                     X = (j + 1) * GraphStepX;
                     Y = Mathf.Clamp(OffsetY + FloatValue * GraphStepY, 0.0f, m_GraphHeight);
@@ -1248,9 +1248,9 @@ public class DrawDebugTools : MonoBehaviour
     public static void FlushDebugLines()
     {
         // Delete all lines
-        for (int i = DrawDebugTools.Instance.m_BatchedLines.Count - 1; i >= 0; i--)
+        for (int i = DDT.Instance.m_BatchedLines.Count - 1; i >= 0; i--)
         {
-            DrawDebugTools.Instance.m_BatchedLines.RemoveAt(i);
+            DDT.Instance.m_BatchedLines.RemoveAt(i);
         }
     } 
     #endregion
@@ -1479,7 +1479,7 @@ public class DebugCamera : MonoBehaviour
 {
     private void OnPostRender()
     {
-        DrawDebugTools.Instance.Draw();
+        DDT.Instance.Draw();
     }
 }
 #endregion
