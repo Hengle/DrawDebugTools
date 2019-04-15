@@ -420,11 +420,6 @@ public class DrawDebugTools : MonoBehaviour
         DrawDebugTools.Instance.m_BatchedLines.Add(new BatchedLine(LineStart, LineEnd, Vector3.zero, Quaternion.identity, Color, LifeTime));
     }
 
-    private static void InternalDrawLine(Vector3 LineStart, Vector3 LineEnd, Vector3 Center, Quaternion Rotation, Color Color, float LifeTime = 0.0f)
-    {
-        DrawDebugTools.Instance.m_BatchedLines.Add(new BatchedLine(LineStart, LineEnd, Center, Rotation, Color, LifeTime));
-    }
-
     public static void DrawPoint(Vector3 Position, float Size, Color Color, float LifeTime = 0.0f)
     {
         // X
@@ -533,50 +528,9 @@ public class DrawDebugTools : MonoBehaviour
     public static void DrawCylinder(Vector3 Start, Vector3 End, float Radius, int Segments, Color Color, float LifeTime = 0.0f)
     {
         Vector3 Center = (Start + End) / 2.0f;
-        DrawCylinder(Start, End, Quaternion.identity, Center, Radius, Segments, Color, LifeTime);
+        InternalDrawCylinder(Start, End, Quaternion.identity, Center, Radius, Segments, Color, LifeTime);
     }
-
-    private static void DrawCylinder(Vector3 Start, Vector3 End, Quaternion Rotation, Vector3 Center, float Radius, int Segments, Color Color, float LifeTime = 0.0f)
-    {
-        Segments = Mathf.Max(Segments, 4);
-
-        Vector3 CylinderUp = (End - Start).normalized;
-        Vector3 CylinderRight = Vector3.Cross(Vector3.up, CylinderUp).normalized;
-        Vector3 CylinderForward = Vector3.Cross(CylinderRight, CylinderUp).normalized;
-        float CylinderHeight = (End - Start).magnitude;
-
-        float AngleInc = 2.0f * Mathf.PI / (float)Segments;
-               
-        // Debug End
-        float Angle = 0.0f;
-        Vector3 P_1;
-        Vector3 P_2;
-        Vector3 P_3;
-        Vector3 P_4;
-               
-        Vector3 RotatedVect;
-        for (int i = 0; i < Segments; i++)
-        {
-            RotatedVect = Quaternion.AngleAxis(Mathf.Rad2Deg * Angle, CylinderUp) * CylinderRight * Radius;
-
-            P_1 = Start + RotatedVect;
-            P_2 = P_1 + CylinderUp * CylinderHeight;
-
-            // Draw lines
-            InternalDrawLine(P_1, P_2, Center, Rotation, Color, LifeTime);
-
-            Angle += AngleInc;
-            RotatedVect = Quaternion.AngleAxis(Mathf.Rad2Deg * Angle, CylinderUp) * CylinderRight * Radius;
-
-            P_3 = Start + RotatedVect;
-            P_4 = P_3 + CylinderUp * CylinderHeight;
-
-            // Draw lines
-            InternalDrawLine(P_1, P_3, Center, Rotation, Color, LifeTime);
-            InternalDrawLine(P_2, P_4, Center, Rotation, Color, LifeTime);
-        }
-    }
-
+    
     public static void DrawCone(Vector3 Position, Vector3 Direction, float Length, float AngleWidth, float AngleHeight, int Segments, Color Color, float LifeTime = 0.0f)
     {
         Segments = Mathf.Max(Segments, 4);
@@ -650,13 +604,13 @@ public class DrawDebugTools : MonoBehaviour
 
     public static void DrawString2D(Vector2 Position, string Text, TextAnchor Anchor, Color TextColor, float LifeTime = 0.0f)
     {
-        AddDebugText(Text, Anchor, Position - new Vector2(0.0f, 1.0f), Quaternion.identity, Color.black, 1.0f, LifeTime, true);
-        AddDebugText(Text, Anchor, Position, Quaternion.identity, TextColor, 1.0f, LifeTime, true);
+        InternalAddDebugText(Text, Anchor, Position - new Vector2(0.0f, 1.0f), Quaternion.identity, Color.black, 1.0f, LifeTime, true);
+        InternalAddDebugText(Text, Anchor, Position, Quaternion.identity, TextColor, 1.0f, LifeTime, true);
     }
 
     public static void DrawString3D(Vector3 Position, Quaternion Rotation, string Text, TextAnchor Anchor, Color TextColor, float TextSize = 1.0f, float LifeTime = 0.0f)
     {
-        AddDebugText(Text, Anchor, Position, Rotation, TextColor, TextSize * 0.01f, LifeTime, false);
+        InternalAddDebugText(Text, Anchor, Position, Rotation, TextColor, TextSize * 0.01f, LifeTime, false);
     }
 
     public static void DrawFrustum(Camera Camera, Color Color, float LifeTime = 0.0f)
@@ -681,32 +635,6 @@ public class DrawDebugTools : MonoBehaviour
         }
     }
 
-    public static void DrawCircle(Vector3 Base, Vector3 X, Vector3 Z, Color Color, float Radius, int Segments, float LifeTime = 0.0f)
-    {
-        float AngleDelta = 2.0f * Mathf.PI / Segments;
-        Vector3 LastPoint = Base + X * Radius;
-
-        for (int i = 0; i < Segments; i++)
-        {
-            Vector3 Point = Base + (X * Mathf.Cos(AngleDelta * (i + 1)) + Z * Mathf.Sin(AngleDelta * (i + 1))) * Radius;
-            InternalDrawLine(LastPoint, Point, Base, Quaternion.identity, Color, LifeTime);
-            LastPoint = Point;
-        }
-    }
-
-    public static void DrawHalfCircle(Vector3 Base, Vector3 X, Vector3 Z, Color Color, float Radius, int Segments, float LifeTime = 0.0f)
-    {
-        float AngleDelta = 2.0f * Mathf.PI / Segments;
-        Vector3 LastPoint = Base + X * Radius;
-
-        for (int i = 0; i < (Segments / 2); i++)
-        {
-            Vector3 Point = Base + (X * Mathf.Cos(AngleDelta * (i + 1)) + Z * Mathf.Sin(AngleDelta * (i + 1))) * Radius;
-            InternalDrawLine(LastPoint, Point, Base, Quaternion.identity, Color, LifeTime);
-            LastPoint = Point;
-        }
-    }
-
     public static void DrawCapsule(Vector3 Center, float HalfHeight, float Radius, Quaternion Rotation, Color Color, float LifeTime = 0.0f)
     {
         int Segments = 16;
@@ -721,14 +649,14 @@ public class DrawDebugTools : MonoBehaviour
         Vector3 TopPoint = Center + HalfMaxed * AxisY;
         Vector3 BottomPoint = Center - HalfMaxed * AxisY;
 
-        DrawCircle(TopPoint, AxisX, AxisZ, Color, Radius, Segments, LifeTime);
-        DrawCircle(BottomPoint, AxisX, AxisZ, Color, Radius, Segments, LifeTime);
+        InternalDrawCapsuleCircle(TopPoint, AxisX, AxisZ, Color, Radius, Segments, LifeTime);
+        InternalDrawCapsuleCircle(BottomPoint, AxisX, AxisZ, Color, Radius, Segments, LifeTime);
 
-        DrawHalfCircle(TopPoint, AxisX, AxisY, Color, Radius, Segments, LifeTime);
-        DrawHalfCircle(TopPoint, AxisZ, AxisY, Color, Radius, Segments, LifeTime);
+        InternalDrawHalfCircle(TopPoint, AxisX, AxisY, Color, Radius, Segments, LifeTime);
+        InternalDrawHalfCircle(TopPoint, AxisZ, AxisY, Color, Radius, Segments, LifeTime);
 
-        DrawHalfCircle(BottomPoint, AxisX, -AxisY, Color, Radius, Segments, LifeTime);
-        DrawHalfCircle(BottomPoint, AxisZ, -AxisY, Color, Radius, Segments, LifeTime);
+        InternalDrawHalfCircle(BottomPoint, AxisX, -AxisY, Color, Radius, Segments, LifeTime);
+        InternalDrawHalfCircle(BottomPoint, AxisZ, -AxisY, Color, Radius, Segments, LifeTime);
 
         InternalDrawLine(TopPoint + Radius * AxisX, BottomPoint + Radius * AxisX, Vector3.zero, Quaternion.identity, Color, LifeTime);
         InternalDrawLine(TopPoint - Radius * AxisX, BottomPoint - Radius * AxisX, Vector3.zero, Quaternion.identity, Color, LifeTime);
@@ -741,54 +669,7 @@ public class DrawDebugTools : MonoBehaviour
         Camera ActiveCam = Camera.main;
         if (DrawDebugTools.Instance.m_DebugCameraIsActive)
             ActiveCam = DrawDebugTools.Instance.m_MainCamera.GetComponent<Camera>();
-        DrawCamera(ActiveCam, Color, Scale, LifeTime);
-    }
-
-    public static void DrawCamera(Camera Camera, Color Color, float Scale = 1.0f, float LifeTime = 0.0f)
-    {
-        if (Camera == null) return;
-
-        float CamBoxDepth = 0.4f;
-        float CamBoxHeight = 0.3f;
-        float CamBoxWidth = 0.2f;
-        float CamCylRadius = 0.25f;
-        float CamCylDistance = 0.55f;
-
-            Vector3 CamPos = Camera.transform.position;
-        Quaternion CamRot = Camera.transform.rotation;
-
-        // Box
-        DrawBox(CamPos, CamRot, new Vector3(CamBoxWidth, CamBoxHeight, CamBoxDepth), Color, LifeTime);
-
-        // Two cylinders
-        Vector3 V1 = CamPos + new Vector3(CamBoxWidth/2.0f, (CamBoxHeight ) + CamCylRadius, -CamCylDistance / 2.0f);
-        Vector3 V2 = CamPos + new Vector3(-CamBoxWidth / 2.0f, (CamBoxHeight) + CamCylRadius, -CamCylDistance / 2.0f);
-
-        DrawCylinder(V1, V2, CamRot, CamPos, CamCylRadius, 8, Color, LifeTime);
-        V1 += new Vector3(0.0f, 0.0f, CamCylDistance);
-        V2 += new Vector3(0.0f, 0.0f, CamCylDistance);
-        DrawCylinder(V1, V2, CamRot, CamPos, CamCylRadius, 8, Color, LifeTime);
-
-        // Zoom
-        Vector3 Extent = new Vector3(CamBoxWidth * 0.7f, CamBoxHeight * 0.7f, CamBoxDepth * 0.7f);
-        Vector3 Center = CamPos + new Vector3(0.0f, 0.0f, CamBoxDepth);
-
-        InternalDrawLine(Center + new Vector3(Extent.x, Extent.y, 0.0f), Center + new Vector3(Extent.x, -Extent.y, 0.0f), CamPos, CamRot, Color, LifeTime);
-        InternalDrawLine(Center + new Vector3(Extent.x, -Extent.y, 0.0f), Center + new Vector3(-Extent.x, -Extent.y, 0.0f), CamPos, CamRot, Color, LifeTime);
-        InternalDrawLine(Center + new Vector3(-Extent.x, -Extent.y, 0.0f), Center + new Vector3(-Extent.x, Extent.y, 0.0f), CamPos, CamRot, Color, LifeTime);
-        InternalDrawLine(Center + new Vector3(-Extent.x, Extent.y, 0.0f), Center + new Vector3(Extent.x, Extent.y, 0.0f), CamPos, CamRot, Color, LifeTime);
-
-        float ZoomDepth = CamBoxDepth;
-        float v = 3.0f;
-        InternalDrawLine(Center + new Vector3(Extent.x * v, Extent.y * v, ZoomDepth), Center + new Vector3(Extent.x * v, -Extent.y * v, ZoomDepth), CamPos, CamRot, Color, LifeTime);
-        InternalDrawLine(Center + new Vector3(Extent.x * v, -Extent.y * v, ZoomDepth), Center + new Vector3(-Extent.x * v, -Extent.y * v, ZoomDepth), CamPos, CamRot, Color, LifeTime);
-        InternalDrawLine(Center + new Vector3(-Extent.x * v, -Extent.y * v, ZoomDepth), Center + new Vector3(-Extent.x * v, Extent.y * v, ZoomDepth), CamPos, CamRot, Color, LifeTime);
-        InternalDrawLine(Center + new Vector3(-Extent.x * v, Extent.y * v, ZoomDepth), Center + new Vector3(Extent.x * v, Extent.y * v, ZoomDepth), CamPos, CamRot, Color, LifeTime);
-
-        InternalDrawLine(Center + new Vector3(Extent.x, Extent.y, 0.0f), Center + new Vector3(Extent.x * v, Extent.y * v, ZoomDepth), CamPos, CamRot, Color, LifeTime);
-        InternalDrawLine(Center + new Vector3(Extent.x, -Extent.y, 0.0f), Center + new Vector3(Extent.x * v, -Extent.y * v, ZoomDepth), CamPos, CamRot, Color, LifeTime);
-        InternalDrawLine(Center + new Vector3(-Extent.x, -Extent.y, 0.0f), Center + new Vector3(-Extent.x * v, -Extent.y * v, ZoomDepth), CamPos, CamRot, Color, LifeTime);
-        InternalDrawLine(Center + new Vector3(-Extent.x, Extent.y, 0.0f), Center + new Vector3(-Extent.x * v, Extent.y * v, ZoomDepth), CamPos, CamRot, Color, LifeTime);
+        InternalDrawCamera(ActiveCam, Color, Scale, LifeTime);
     }
 
     public static void DrawGrid(Vector3 Position, float GridSize, float CellSize, float LifeTime)
@@ -865,12 +746,7 @@ public class DrawDebugTools : MonoBehaviour
     {
         DrawDebugTools.Instance.m_LogMessagesList.Insert(0, new DebugLogMessage(LogMessage, Color, LifeTime));
     }
-
-    private static void AddDebugText(string Text, TextAnchor Anchor, Vector3 Position, Quaternion Rotation, Color Color, float Size, float LifeTime, bool Is2DText)
-    {
-        DrawDebugTools.Instance.m_DebugTextesList.Add(new DebugText(Text, Anchor, Position, Rotation, Color, Size, LifeTime, Is2DText));
-    }
-
+    
     public static void DrawFloatGraph(string UniqueGraphName, float FloatValueToDebug, float GraphHalfMinMaxRange = 100.0f, bool AutoAdjustMinMaxRange = false, int SamplesCount = 50)
     {
         bool IsFloatAlreadyExists = false;
@@ -895,6 +771,133 @@ public class DrawDebugTools : MonoBehaviour
             Instance.m_FloatGraphsList.Add(new DebugFloatGraph(UniqueGraphName, SamplesCount, GraphHalfMinMaxRange, AutoAdjustMinMaxRange, TimeBeforeRemoveInactiveGraph));
         }
     }
+
+    #region Private Internal Functions
+    private static void InternalDrawLine(Vector3 LineStart, Vector3 LineEnd, Vector3 Center, Quaternion Rotation, Color Color, float LifeTime = 0.0f)
+    {
+        DrawDebugTools.Instance.m_BatchedLines.Add(new BatchedLine(LineStart, LineEnd, Center, Rotation, Color, LifeTime));
+    }
+
+    private static void InternalDrawCapsuleCircle(Vector3 Base, Vector3 X, Vector3 Z, Color Color, float Radius, int Segments, float LifeTime = 0.0f)
+    {
+        float AngleDelta = 2.0f * Mathf.PI / Segments;
+        Vector3 LastPoint = Base + X * Radius;
+
+        for (int i = 0; i < Segments; i++)
+        {
+            Vector3 Point = Base + (X * Mathf.Cos(AngleDelta * (i + 1)) + Z * Mathf.Sin(AngleDelta * (i + 1))) * Radius;
+            InternalDrawLine(LastPoint, Point, Base, Quaternion.identity, Color, LifeTime);
+            LastPoint = Point;
+        }
+    }
+
+    private static void InternalDrawCamera(Camera Camera, Color Color, float Scale = 1.0f, float LifeTime = 0.0f)
+    {
+        if (Camera == null) return;
+
+        float CamBoxDepth = 0.4f;
+        float CamBoxHeight = 0.3f;
+        float CamBoxWidth = 0.2f;
+        float CamCylRadius = 0.25f;
+        float CamCylDistance = 0.55f;
+
+        Vector3 CamPos = Camera.transform.position;
+        Quaternion CamRot = Camera.transform.rotation;
+
+        // Box
+        DrawBox(CamPos, CamRot, new Vector3(CamBoxWidth, CamBoxHeight, CamBoxDepth), Color, LifeTime);
+
+        // Two cylinders
+        Vector3 V1 = CamPos + new Vector3(CamBoxWidth / 2.0f, (CamBoxHeight) + CamCylRadius, -CamCylDistance / 2.0f);
+        Vector3 V2 = CamPos + new Vector3(-CamBoxWidth / 2.0f, (CamBoxHeight) + CamCylRadius, -CamCylDistance / 2.0f);
+
+        InternalDrawCylinder(V1, V2, CamRot, CamPos, CamCylRadius, 8, Color, LifeTime);
+        V1 += new Vector3(0.0f, 0.0f, CamCylDistance);
+        V2 += new Vector3(0.0f, 0.0f, CamCylDistance);
+        InternalDrawCylinder(V1, V2, CamRot, CamPos, CamCylRadius, 8, Color, LifeTime);
+
+        // Zoom
+        Vector3 Extent = new Vector3(CamBoxWidth * 0.7f, CamBoxHeight * 0.7f, CamBoxDepth * 0.7f);
+        Vector3 Center = CamPos + new Vector3(0.0f, 0.0f, CamBoxDepth);
+
+        InternalDrawLine(Center + new Vector3(Extent.x, Extent.y, 0.0f), Center + new Vector3(Extent.x, -Extent.y, 0.0f), CamPos, CamRot, Color, LifeTime);
+        InternalDrawLine(Center + new Vector3(Extent.x, -Extent.y, 0.0f), Center + new Vector3(-Extent.x, -Extent.y, 0.0f), CamPos, CamRot, Color, LifeTime);
+        InternalDrawLine(Center + new Vector3(-Extent.x, -Extent.y, 0.0f), Center + new Vector3(-Extent.x, Extent.y, 0.0f), CamPos, CamRot, Color, LifeTime);
+        InternalDrawLine(Center + new Vector3(-Extent.x, Extent.y, 0.0f), Center + new Vector3(Extent.x, Extent.y, 0.0f), CamPos, CamRot, Color, LifeTime);
+
+        float ZoomDepth = CamBoxDepth;
+        float v = 3.0f;
+        InternalDrawLine(Center + new Vector3(Extent.x * v, Extent.y * v, ZoomDepth), Center + new Vector3(Extent.x * v, -Extent.y * v, ZoomDepth), CamPos, CamRot, Color, LifeTime);
+        InternalDrawLine(Center + new Vector3(Extent.x * v, -Extent.y * v, ZoomDepth), Center + new Vector3(-Extent.x * v, -Extent.y * v, ZoomDepth), CamPos, CamRot, Color, LifeTime);
+        InternalDrawLine(Center + new Vector3(-Extent.x * v, -Extent.y * v, ZoomDepth), Center + new Vector3(-Extent.x * v, Extent.y * v, ZoomDepth), CamPos, CamRot, Color, LifeTime);
+        InternalDrawLine(Center + new Vector3(-Extent.x * v, Extent.y * v, ZoomDepth), Center + new Vector3(Extent.x * v, Extent.y * v, ZoomDepth), CamPos, CamRot, Color, LifeTime);
+
+        InternalDrawLine(Center + new Vector3(Extent.x, Extent.y, 0.0f), Center + new Vector3(Extent.x * v, Extent.y * v, ZoomDepth), CamPos, CamRot, Color, LifeTime);
+        InternalDrawLine(Center + new Vector3(Extent.x, -Extent.y, 0.0f), Center + new Vector3(Extent.x * v, -Extent.y * v, ZoomDepth), CamPos, CamRot, Color, LifeTime);
+        InternalDrawLine(Center + new Vector3(-Extent.x, -Extent.y, 0.0f), Center + new Vector3(-Extent.x * v, -Extent.y * v, ZoomDepth), CamPos, CamRot, Color, LifeTime);
+        InternalDrawLine(Center + new Vector3(-Extent.x, Extent.y, 0.0f), Center + new Vector3(-Extent.x * v, Extent.y * v, ZoomDepth), CamPos, CamRot, Color, LifeTime);
+    }
+
+    private static void InternalDrawCylinder(Vector3 Start, Vector3 End, Quaternion Rotation, Vector3 Center, float Radius, int Segments, Color Color, float LifeTime = 0.0f)
+    {
+        Segments = Mathf.Max(Segments, 4);
+
+        Vector3 CylinderUp = (End - Start).normalized;
+        Vector3 CylinderRight = Vector3.Cross(Vector3.up, CylinderUp).normalized;
+        Vector3 CylinderForward = Vector3.Cross(CylinderRight, CylinderUp).normalized;
+        float CylinderHeight = (End - Start).magnitude;
+
+        float AngleInc = 2.0f * Mathf.PI / (float)Segments;
+
+        // Debug End
+        float Angle = 0.0f;
+        Vector3 P_1;
+        Vector3 P_2;
+        Vector3 P_3;
+        Vector3 P_4;
+
+        Vector3 RotatedVect;
+        for (int i = 0; i < Segments; i++)
+        {
+            RotatedVect = Quaternion.AngleAxis(Mathf.Rad2Deg * Angle, CylinderUp) * CylinderRight * Radius;
+
+            P_1 = Start + RotatedVect;
+            P_2 = P_1 + CylinderUp * CylinderHeight;
+
+            // Draw lines
+            InternalDrawLine(P_1, P_2, Center, Rotation, Color, LifeTime);
+
+            Angle += AngleInc;
+            RotatedVect = Quaternion.AngleAxis(Mathf.Rad2Deg * Angle, CylinderUp) * CylinderRight * Radius;
+
+            P_3 = Start + RotatedVect;
+            P_4 = P_3 + CylinderUp * CylinderHeight;
+
+            // Draw lines
+            InternalDrawLine(P_1, P_3, Center, Rotation, Color, LifeTime);
+            InternalDrawLine(P_2, P_4, Center, Rotation, Color, LifeTime);
+        }
+    }
+
+    private static void InternalAddDebugText(string Text, TextAnchor Anchor, Vector3 Position, Quaternion Rotation, Color Color, float Size, float LifeTime, bool Is2DText)
+    {
+        DrawDebugTools.Instance.m_DebugTextesList.Add(new DebugText(Text, Anchor, Position, Rotation, Color, Size, LifeTime, Is2DText));
+    }
+
+    private static void InternalDrawHalfCircle(Vector3 Base, Vector3 X, Vector3 Z, Color Color, float Radius, int Segments, float LifeTime = 0.0f)
+    {
+        float AngleDelta = 2.0f * Mathf.PI / Segments;
+        Vector3 LastPoint = Base + X * Radius;
+
+        for (int i = 0; i < (Segments / 2); i++)
+        {
+            Vector3 Point = Base + (X * Mathf.Cos(AngleDelta * (i + 1)) + Z * Mathf.Sin(AngleDelta * (i + 1))) * Radius;
+            InternalDrawLine(LastPoint, Point, Base, Quaternion.identity, Color, LifeTime);
+            LastPoint = Point;
+        }
+    }
+
+    #endregion
     #endregion
 
     #region ========== Handle Drawing Lines/Quads ==========
@@ -1108,8 +1111,8 @@ public class DrawDebugTools : MonoBehaviour
             DrawString2D(OriginPosition + new Vector3(0.0f, m_GraphHeight + TextButtomMargin, 0.0f), FloatGraphsArray[i].m_UniqueFloatName, TextAnchor.LowerLeft, Color.white, 0.0f);
 
             // Draw min and max values
-            AddDebugText(FloatGraphsArray[i].m_GraphValueLengh.ToString(), TextAnchor.UpperLeft, OriginPosition + new Vector3(2.0f, m_GraphHeight, 0.0f), Quaternion.identity, Color.white * new Color(1.0f, 1.0f, 1.0f, m_GraphTextAlpha), 1.0f, 0.0f, true);
-            AddDebugText((-FloatGraphsArray[i].m_GraphValueLengh).ToString(), TextAnchor.LowerLeft, OriginPosition + new Vector3(2.0f, 2.0f, 0.0f), Quaternion.identity, Color.white * new Color(1.0f, 1.0f, 1.0f, m_GraphTextAlpha), 1.0f, 0.0f, true);
+            InternalAddDebugText(FloatGraphsArray[i].m_GraphValueLengh.ToString(), TextAnchor.UpperLeft, OriginPosition + new Vector3(2.0f, m_GraphHeight, 0.0f), Quaternion.identity, Color.white * new Color(1.0f, 1.0f, 1.0f, m_GraphTextAlpha), 1.0f, 0.0f, true);
+            InternalAddDebugText((-FloatGraphsArray[i].m_GraphValueLengh).ToString(), TextAnchor.LowerLeft, OriginPosition + new Vector3(2.0f, 2.0f, 0.0f), Quaternion.identity, Color.white * new Color(1.0f, 1.0f, 1.0f, m_GraphTextAlpha), 1.0f, 0.0f, true);
 
             // Draw bg points
             GL.TexCoord2(0.0f, 0.0f);
@@ -1193,16 +1196,12 @@ public class DrawDebugTools : MonoBehaviour
                 }
 
                 // draw value text
-                AddDebugText((FloatValue).ToString(".000"), FloatValue >= 0.0f ? TextAnchor.UpperRight : TextAnchor.LowerRight, new Vector3(OriginPosition.x + m_GraphWidth, Mathf.Clamp(LineEnd.y, OriginPosition.y, OriginPosition.y + m_GraphHeight), 0.0f), Quaternion.identity, Color.white * new Color(1.0f, 1.0f, 1.0f, 1.0f), 1.0f, 0.0f, true);
+                InternalAddDebugText((FloatValue).ToString(".000"), FloatValue >= 0.0f ? TextAnchor.UpperRight : TextAnchor.LowerRight, new Vector3(OriginPosition.x + m_GraphWidth, Mathf.Clamp(LineEnd.y, OriginPosition.y, OriginPosition.y + m_GraphHeight), 0.0f), Quaternion.identity, Color.white * new Color(1.0f, 1.0f, 1.0f, 1.0f), 1.0f, 0.0f, true);
             }
         }
         GL.End();
         GL.PopMatrix();
-
-        float FloatValuew = 3.0f;
-        AddDebugText((FloatValuew).ToString(".000"), FloatValuew >= 0.0f ? TextAnchor.UpperRight : TextAnchor.LowerRight, new Vector3(OriginPosition.x + m_GraphWidth,  OriginPosition.y , 0.0f), Quaternion.identity, Color.white * new Color(1.0f, 1.0f, 1.0f, 1.0f), 1.0f, 0.0f, true);
-        AddDebugText("999", TextAnchor.LowerRight, new Vector3(OriginPosition.x + m_GraphWidth, OriginPosition.y, 0.0f), Quaternion.identity, Color.white * new Color(1.0f, 1.0f, 1.0f, 1.0f), 1.0f, 0.0f, true);
-
+                
         // Update text life time
         for (int i = m_FloatGraphsList.Count - 1; i >= 0; i--)
         {
