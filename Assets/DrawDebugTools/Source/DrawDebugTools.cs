@@ -316,7 +316,7 @@ public class DrawDebugTools : MonoBehaviour
             System.Type[] CompsToInclude = new System.Type[] { typeof(Transform), typeof(Camera) };
             for (int i = 0; i < ComponentsArray.Length; i++)
             {
-                if (CompsToInclude.Contains(ComponentsArray[i].GetType()))
+                if (ComponentsArray[i] != null && CompsToInclude.Contains(ComponentsArray[i].GetType()))
                 {
                     DrawDebugTools.Instance.m_DebugCamera.AddComponent(ComponentsArray[i].GetType());
                 }
@@ -415,11 +415,25 @@ public class DrawDebugTools : MonoBehaviour
         DrawDebugTools.Instance.m_BatchedLines.AddRange(Lines);
     }
 
+    /// <summary>
+    /// Draw a 3D line in space
+    /// </summary>
+    /// <param name="LineStart">Position of the line start</param>
+    /// <param name="LineEnd">Position of the line end</param>
+    /// <param name="Color">Color of the line</param>
+    /// <param name="LifeTime">Line life time</param>
     public static void DrawLine(Vector3 LineStart, Vector3 LineEnd, Color Color, float LifeTime = 0.0f)
     {
         DrawDebugTools.Instance.m_BatchedLines.Add(new BatchedLine(LineStart, LineEnd, Vector3.zero, Quaternion.identity, Color, LifeTime));
     }
 
+    /// <summary>
+    /// Draw a 3D point in space
+    /// </summary>
+    /// <param name="Position">Position of the point</param>
+    /// <param name="Size">Size of the point</param>
+    /// <param name="Color">Color of the point</param>
+    /// <param name="LifeTime">Point life time</param>
     public static void DrawPoint(Vector3 Position, float Size, Color Color, float LifeTime = 0.0f)
     {
         // X
@@ -430,17 +444,33 @@ public class DrawDebugTools : MonoBehaviour
         InternalDrawLine(Position + new Vector3(0.0f, 0.0f, -Size / 2.0f), Position + new Vector3(0.0f, 0.0f, Size / 2.0f), Position, Quaternion.identity, Color, LifeTime);
     }
 
-    public static void DrawDirectionalArrow(Vector3 LineStart, Vector3 LineEnd, float ArrowSize, Color Color, float LifeTime = 0.0f)
+    /// <summary>
+    /// Draw directional arrow
+    /// </summary>
+    /// <param name="ArrowStart">Arrow start position</param>
+    /// <param name="ArrowEnd">Arrow end position</param>
+    /// <param name="ArrowSize">Arrow size</param>
+    /// <param name="Color">Arrow color</param>
+    /// <param name="LifeTime">Arrow life time</param>
+    public static void DrawDirectionalArrow(Vector3 ArrowStart, Vector3 ArrowEnd, float ArrowSize, Color Color, float LifeTime = 0.0f)
     {
-        InternalDrawLine(LineStart, LineEnd, LineStart, Quaternion.identity, Color, LifeTime);
+        InternalDrawLine(ArrowStart, ArrowEnd, ArrowStart, Quaternion.identity, Color, LifeTime);
 
-        Vector3 Dir = (LineEnd - LineStart).normalized;
+        Vector3 Dir = (ArrowEnd - ArrowStart).normalized;
         Vector3 Right = Vector3.Cross(Vector3.up, Dir);
 
-        InternalDrawLine(LineEnd, LineEnd + (Right - Dir.normalized) * ArrowSize, LineStart, Quaternion.identity, Color, LifeTime);
-        InternalDrawLine(LineEnd, LineEnd + (-Right - Dir.normalized) * ArrowSize, LineStart, Quaternion.identity, Color, LifeTime);
+        InternalDrawLine(ArrowEnd, ArrowEnd + (Right - Dir.normalized) * ArrowSize, ArrowStart, Quaternion.identity, Color, LifeTime);
+        InternalDrawLine(ArrowEnd, ArrowEnd + (-Right - Dir.normalized) * ArrowSize, ArrowStart, Quaternion.identity, Color, LifeTime);
     }
 
+    /// <summary>
+    /// Draw a box
+    /// </summary>
+    /// <param name="Center">Center position of the box</param>
+    /// <param name="Rotation">Rotaion of the box</param>
+    /// <param name="Extent">The extent of the box</param>
+    /// <param name="Color">Color of the box</param>
+    /// <param name="LifeTime">Box life time</param>
     public static void DrawBox(Vector3 Center, Quaternion Rotation, Vector3 Extent, Color Color, float LifeTime = 0.0f)
     {
         InternalDrawLine(Center + new Vector3(Extent.x, Extent.y, Extent.z), Center + new Vector3(Extent.x, -Extent.y, Extent.z), Center, Rotation, Color, LifeTime);
@@ -459,6 +489,15 @@ public class DrawDebugTools : MonoBehaviour
         InternalDrawLine(Center + new Vector3(-Extent.x, Extent.y, Extent.z), Center + new Vector3(-Extent.x, Extent.y, -Extent.z), Center, Rotation, Color, LifeTime);
     }
 
+    /// <summary>
+    /// Draw a 3D circle
+    /// </summary>
+    /// <param name="Center">Centre position of the circle</param>
+    /// <param name="Rotation">Rotation of the circle</param>
+    /// <param name="Radius">Radius of the circle</param>
+    /// <param name="Segments">Segments count in the circle</param>
+    /// <param name="Color">Color of the circle</param>
+    /// <param name="LifeTime">Circle life time</param>
     public static void DrawCircle(Vector3 Center, Quaternion Rotation, float Radius, int Segments, Color Color, float LifeTime = 0.0f)
     {
         Segments = Mathf.Max(Segments, 4);
@@ -476,6 +515,15 @@ public class DrawDebugTools : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Draw a 3D circle
+    /// </summary>
+    /// <param name="Center">Centre position of the circle</param>
+    /// <param name="Radius">Radius of the circle</param>
+    /// <param name="Segments">Segments count in the circle</param>
+    /// <param name="Color">Color of the circle</param>
+    /// <param name="DrawPlaneAxis">Plane axis to draw circle in (XZ, XY, YZ)</param>
+    /// <param name="LifeTime">Circle life time</param>
     public static void DrawCircle(Vector3 Center, float Radius, int Segments, Color Color, EDrawPlaneAxis DrawPlaneAxis = EDrawPlaneAxis.XZ, float LifeTime = 0.0f)
     {
         Segments = Mathf.Max(Segments, 4);
@@ -518,19 +566,46 @@ public class DrawDebugTools : MonoBehaviour
         }
     }
 
-    public static void DrawCoordinateSystem(Vector3 Position, Quaternion Rotation, float Scale, float LifeTime = 0.0f)
+    /// <summary>
+    /// Draw a 3D coordinates
+    /// </summary>
+    /// <param name="Position">Position of the coordinates</param>
+    /// <param name="Rotation">Rotation of the coordinates</param>
+    /// <param name="Scale">Scale of the coordinate</param>
+    /// <param name="LifeTime">Coordinates lifetime</param>
+    public static void Draw3DCoordinates(Vector3 Position, Quaternion Rotation, float Scale, float LifeTime = 0.0f)
     {
         InternalDrawLine(Position, Position + new Vector3(Scale, 0.0f, 0.0f), Position, Rotation, Color.red, LifeTime);
         InternalDrawLine(Position, Position + new Vector3(0.0f, Scale, 0.0f), Position, Rotation, Color.green, LifeTime);
         InternalDrawLine(Position, Position + new Vector3(0.0f, 0.0f, Scale), Position, Rotation, Color.blue, LifeTime);
     }
 
+    /// <summary>
+    /// Draw a 3D cylinder
+    /// </summary>
+    /// <param name="Start">Cylinder start position</param>
+    /// <param name="End">Cylinder end position</param>
+    /// <param name="Radius">Cylinder radius</param>
+    /// <param name="Segments">Cylinder segments count</param>
+    /// <param name="Color">Color of the cylinder</param>
+    /// <param name="LifeTime">Cylinder life time</param>
     public static void DrawCylinder(Vector3 Start, Vector3 End, float Radius, int Segments, Color Color, float LifeTime = 0.0f)
     {
         Vector3 Center = (Start + End) / 2.0f;
         InternalDrawCylinder(Start, End, Quaternion.identity, Center, Radius, Segments, Color, LifeTime);
     }
     
+    /// <summary>
+    /// Draw a 3D cone
+    /// </summary>
+    /// <param name="Position">Cone position</param>
+    /// <param name="Direction">Cone direction</param>
+    /// <param name="Length">Cone length</param>
+    /// <param name="AngleWidth">Cone angle with</param>
+    /// <param name="AngleHeight">Cone angle height</param>
+    /// <param name="Segments">Cone segments count</param>
+    /// <param name="Color">Cone color</param>
+    /// <param name="LifeTime">Cone life time</param>
     public static void DrawCone(Vector3 Position, Vector3 Direction, float Length, float AngleWidth, float AngleHeight, int Segments, Color Color, float LifeTime = 0.0f)
     {
         Segments = Mathf.Max(Segments, 4);
@@ -602,17 +677,41 @@ public class DrawDebugTools : MonoBehaviour
         DrawLine(CurrentPoint, FirstPoint, Color, LifeTime);
     }
 
+    /// <summary>
+    /// Draw 2D text on screen
+    /// </summary>
+    /// <param name="Position">2D position of the text</param>
+    /// <param name="Text">Text string</param>
+    /// <param name="Anchor">Text anchor</param>
+    /// <param name="TextColor">Text color</param>
+    /// <param name="LifeTime">Text life time</param>
     public static void DrawString2D(Vector2 Position, string Text, TextAnchor Anchor, Color TextColor, float LifeTime = 0.0f)
     {
         InternalAddDebugText(Text, Anchor, Position - new Vector2(0.0f, 1.0f), Quaternion.identity, Color.black, 1.0f, LifeTime, true);
         InternalAddDebugText(Text, Anchor, Position, Quaternion.identity, TextColor, 1.0f, LifeTime, true);
     }
 
+    /// <summary>
+    /// Dray 3D text
+    /// </summary>
+    /// <param name="Position">Position of the text</param>
+    /// <param name="Rotation">Rotation of the text</param>
+    /// <param name="Text">Text string</param>
+    /// <param name="Anchor">Text anchor</param>
+    /// <param name="TextColor">Text color</param>
+    /// <param name="TextSize">Text size</param>
+    /// <param name="LifeTime">Text life time</param>
     public static void DrawString3D(Vector3 Position, Quaternion Rotation, string Text, TextAnchor Anchor, Color TextColor, float TextSize = 1.0f, float LifeTime = 0.0f)
     {
         InternalAddDebugText(Text, Anchor, Position, Rotation, TextColor, TextSize * 0.01f, LifeTime, false);
     }
 
+    /// <summary>
+    /// Draw camera frustum
+    /// </summary>
+    /// <param name="Camera">Target camera</param>
+    /// <param name="Color">Frustum color</param>
+    /// <param name="LifeTime">Frustum life time</param>
     public static void DrawFrustum(Camera Camera, Color Color, float LifeTime = 0.0f)
     {
         Plane[] FrustumPlanes = DrawDebugTools.Instance.m_DebugCameraIsActive ? GeometryUtility.CalculateFrustumPlanes(DrawDebugTools.Instance.m_MainCamera.GetComponent<Camera>()) : GeometryUtility.CalculateFrustumPlanes(Camera);
@@ -635,6 +734,15 @@ public class DrawDebugTools : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Draw 3D capsule
+    /// </summary>
+    /// <param name="Center">Center position of the capsule</param>
+    /// <param name="HalfHeight">Capsule half height</param>
+    /// <param name="Radius">Capsule radius</param>
+    /// <param name="Rotation">Capsule rotation</param>
+    /// <param name="Color">Capsule color</param>
+    /// <param name="LifeTime">Capsule life time</param>
     public static void DrawCapsule(Vector3 Center, float HalfHeight, float Radius, Quaternion Rotation, Color Color, float LifeTime = 0.0f)
     {
         int Segments = 16;
@@ -664,6 +772,12 @@ public class DrawDebugTools : MonoBehaviour
         InternalDrawLine(TopPoint - Radius * AxisZ, BottomPoint - Radius * AxisZ, Vector3.zero, Quaternion.identity, Color, LifeTime);
     }
 
+    /// <summary>
+    /// Draw a 3D representation of camera
+    /// </summary>
+    /// <param name="Color">Camera representation color</param>
+    /// <param name="Scale">Scale of the shape</param>
+    /// <param name="LifeTime">Shape life time</param>
     public static void DrawActiveCamera(Color Color, float Scale = 1.0f, float LifeTime = 0.0f)
     {
         Camera ActiveCam = Camera.main;
@@ -672,11 +786,26 @@ public class DrawDebugTools : MonoBehaviour
         InternalDrawCamera(ActiveCam, Color, Scale, LifeTime);
     }
 
+    /// <summary>
+    /// Draw a grid in 3D space
+    /// </summary>
+    /// <param name="Position">Position of the grid</param>
+    /// <param name="GridSize">Grid size</param>
+    /// <param name="CellSize">Grid cell size</param>
+    /// <param name="LifeTime">Grid life time</param>
     public static void DrawGrid(Vector3 Position, float GridSize, float CellSize, float LifeTime)
     {
         DrawGrid(Position, Vector3.up, GridSize, CellSize, LifeTime);
     }
 
+    /// <summary>
+    /// Draw a grid in 3D space
+    /// </summary>
+    /// <param name="Position">Position of the grid</param>
+    /// <param name="Normal">Normal vector of the grid</param>
+    /// <param name="GridSize">Grid size</param>
+    /// <param name="CellSize">Grid cell size</param>
+    /// <param name="LifeTime">Grid life time</param>
     public static void DrawGrid(Vector3 Position, Vector3 Normal, float GridSize, float CellSize, float LifeTime = 0.0f)
     {
         Color MajorLinesColor = new Color(0.8f, 0.8f, 0.8f, 1.0f);
@@ -726,6 +855,13 @@ public class DrawDebugTools : MonoBehaviour
 
     }
 
+    /// <summary>
+    /// Draw a mesure tool to mesure distance between two points
+    /// </summary>
+    /// <param name="Start">Start position</param>
+    /// <param name="End">End position</param>
+    /// <param name="Color">Color of the mesure tool</param>
+    /// <param name="LifeTime">Draw life time</param>
     public static void DrawDistance(Vector3 Start, Vector3 End, Color Color, float LifeTime = 0.0f)
     {
         float Dist = Vector3.Distance(Start, End);
@@ -742,11 +878,25 @@ public class DrawDebugTools : MonoBehaviour
         DrawDebugTools.DrawString3D(DistTextPos, Quaternion.LookRotation(Camera.main.transform.position - DistTextPos), Dist.ToString(".00"), TextAnchor.MiddleCenter, Color.white, 1.0f, LifeTime);
     }
 
+    /// <summary>
+    /// Log message text on screen
+    /// </summary>
+    /// <param name="LogMessage">Log message string</param>
+    /// <param name="Color">Log messsage color</param>
+    /// <param name="LifeTime">Log life time</param>
     public static void Log(string LogMessage, Color Color, float LifeTime = 0.0f)
     {
         DrawDebugTools.Instance.m_LogMessagesList.Insert(0, new DebugLogMessage(LogMessage, Color, LifeTime));
     }
     
+    /// <summary>
+    /// Draw a float graph on screen
+    /// </summary>
+    /// <param name="UniqueGraphName">A unique name for the graph</param>
+    /// <param name="FloatValueToDebug">Float variable to debug</param>
+    /// <param name="GraphHalfMinMaxRange">Min graph value</param>
+    /// <param name="AutoAdjustMinMaxRange">Max graph value</param>
+    /// <param name="SamplesCount">Graph sample count (Default = 50)</param>
     public static void DrawFloatGraph(string UniqueGraphName, float FloatValueToDebug, float GraphHalfMinMaxRange = 100.0f, bool AutoAdjustMinMaxRange = false, int SamplesCount = 50)
     {
         bool IsFloatAlreadyExists = false;

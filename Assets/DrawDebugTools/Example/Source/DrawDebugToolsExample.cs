@@ -49,7 +49,7 @@ public class DrawDebugToolsExample : MonoBehaviour {
         // Draw coordinates
         Xpos += XposIncrement;
         Vector3 CoorsPosition = new Vector3(Xpos, Ypos, 0.0f);
-        DrawDebugTools.DrawCoordinateSystem(CoorsPosition, Quaternion.Euler(Rot), 2.0f);
+        DrawDebugTools.Draw3DCoordinates(CoorsPosition, Quaternion.Euler(Rot), 2.0f);
 
         // Draw arrow
         Xpos += XposIncrement;
