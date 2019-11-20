@@ -351,7 +351,7 @@ public class DrawDebugTools : MonoBehaviour
     /// <param name="LifeTime">Lifetime before stop drawing the sphere</param>
     public static void DrawSphere(Vector3 Center, float Radius, int Segments, Color Color, float LifeTime = 0.0f)
     {
-        DrawSphere(Center, Quaternion.identity, Radius, Segments, Color, LifeTime = 0.0f);
+        DrawSphere(Center, Quaternion.identity, Radius, Segments, Color, LifeTime);
     }
 
     /// <summary>
