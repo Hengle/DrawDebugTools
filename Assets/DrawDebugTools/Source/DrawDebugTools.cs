@@ -992,7 +992,7 @@ public class DrawDebugTools : MonoBehaviour
     {
         Segments = Mathf.Max(Segments, 4);
 
-        Vector3 CylinderUp = (End - Start).normalized;
+        Vector3 CylinderUp = ((End + new Vector3(0.0f, 0.0f, 0.01f)) - Start).normalized;
         Vector3 CylinderRight = Vector3.Cross(Vector3.up, CylinderUp).normalized;
         Vector3 CylinderForward = Vector3.Cross(CylinderRight, CylinderUp).normalized;
         float CylinderHeight = (End - Start).magnitude;
