@@ -20,7 +20,7 @@ public class DrawPointExample : MonoBehaviour {
 
 		// Draw 3d label
 		m_Position = transform.position + new Vector3(0.0f, 0.0f, -m_GridSize / 2.0f - 0.5f);
-		DrawDebugTools.DrawString3D(m_Position, Quaternion.Euler(-90.0f, 180.0f, 0.0f), "DrawPoint", TextAnchor.LowerCenter, Color.white, 1.5f);
+		DrawDebugTools.DrawString3D(m_Position, Quaternion.Euler(-90.0f, 180.0f, 0.0f), "POINT", TextAnchor.LowerCenter, Color.white, 1.5f);
 	}
 	#endregion
 }

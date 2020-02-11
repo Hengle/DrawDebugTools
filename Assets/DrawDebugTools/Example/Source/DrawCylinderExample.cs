@@ -21,7 +21,7 @@ public class DrawCylinderExample : MonoBehaviour {
 
 		// Draw 3d label
 		m_Position = transform.position + new Vector3(0.0f, 0.0f, -m_GridSize / 2.0f - 0.5f);
-		DrawDebugTools.DrawString3D(m_Position, Quaternion.Euler(-90.0f, 180.0f, 0.0f), "Cylinder", TextAnchor.LowerCenter, Color.white, 1.5f);
+		DrawDebugTools.DrawString3D(m_Position, Quaternion.Euler(-90.0f, 180.0f, 0.0f), "CYLINDER", TextAnchor.LowerCenter, Color.white, 1.5f);
 	}
 	#endregion
 }
