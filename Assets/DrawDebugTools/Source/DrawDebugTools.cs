@@ -773,17 +773,29 @@ public class DrawDebugTools : MonoBehaviour
     }
 
     /// <summary>
-    /// Draw a 3D representation of camera
+    /// Draw a 3D representation of the main camera
     /// </summary>
-    /// <param name="Color">Camera representation color</param>
+    /// <param name="Color">Camera shape color</param>
     /// <param name="Scale">Scale of the shape</param>
     /// <param name="LifeTime">Shape life time</param>
-    public static void DrawActiveCamera(Color Color, float Scale = 1.0f, float LifeTime = 0.0f)
+    public static void DrawActiveCamera(Color Color, float LifeTime = 0.0f)
     {
         Camera ActiveCam = Camera.main;
         if (DrawDebugTools.Instance.m_DebugCameraIsActive)
             ActiveCam = DrawDebugTools.Instance.m_MainCamera.GetComponent<Camera>();
-        InternalDrawCamera(ActiveCam, Color, Scale, LifeTime);
+        InternalDrawCamera(ActiveCam, Color, LifeTime);
+    }
+
+    /// <summary>
+    /// Draw a 3D representation of a camera
+    /// </summary>
+    /// /// <param name="Cam">Camera to draw</param>
+    /// <param name="Color">Camera representation color</param>
+    /// <param name="Scale">Scale of the shape</param>
+    /// <param name="LifeTime">Shape life time</param>
+    public static void DrawCamera(Camera Cam, Color Color, float LifeTime = 0.0f)
+    {
+        InternalDrawCamera(Cam, Color, LifeTime);
     }
 
     /// <summary>
@@ -941,7 +953,7 @@ public class DrawDebugTools : MonoBehaviour
         }
     }
 
-    private static void InternalDrawCamera(Camera Camera, Color Color, float Scale = 1.0f, float LifeTime = 0.0f)
+    private static void InternalDrawCamera(Camera Camera, Color Color, float LifeTime = 0.0f)
     {
         if (Camera == null) return;
 
