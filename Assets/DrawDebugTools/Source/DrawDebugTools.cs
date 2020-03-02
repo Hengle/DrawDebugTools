@@ -327,7 +327,7 @@ public class DrawDebugTools : MonoBehaviour
 
             // Set components
             Component[] ComponentsArray = DrawDebugTools.Instance.m_MainCamera.GetComponents(typeof(Component));
-            System.Type[] CompsToInclude = new System.Type[] { typeof(Transform), typeof(Camera) };
+            System.Type[] CompsToInclude = new System.Type[] { typeof(Camera) };
             for (int i = 0; i < ComponentsArray.Length; i++)
             {
                 if (ComponentsArray[i] != null && CompsToInclude.Contains(ComponentsArray[i].GetType()))
