@@ -9,7 +9,9 @@ using System.Xml.Linq;
 public class DrawDebugTools : MonoBehaviour
 {
     #region ========== Variables ==========
-    public static DrawDebugTools               Instance;
+    public static DrawDebugTools    Instance;
+    // Target camera 
+    public Camera                   m_ActiveCamera;
 
     // Lines
     private List<BatchedLine>       m_BatchedLines;
@@ -63,6 +65,14 @@ public class DrawDebugTools : MonoBehaviour
         
         // Init log messsages list
         m_LogMessagesList = new List<DebugLogMessage>();
+
+        // Add DDTCamer component to the active camera
+        if (m_ActiveCamera == null)
+            m_ActiveCamera = Camera.main;
+        DDTCamera DDTCam = m_ActiveCamera.gameObject.AddComponent<DDTCamera>();
+        DDTCam.SetDrawDebugTools(this);
+        DDTCam.SetActive(true);
+        DrawDebugTools.Instance.m_MainCamera = DDTCam.gameObject;
     }
 
     private void Start()
@@ -120,11 +130,11 @@ public class DrawDebugTools : MonoBehaviour
     #endregion
 
     #region ========== OnPostRender Function ==========    
-    private void OnPostRender()
-    {
-        if(!m_DebugCameraIsActive)
-            Draw();        
-    }
+    //private void OnPostRender()
+    //{
+    //    if(!m_DebugCameraIsActive)
+    //        Draw();        
+    //}
 
     public void Draw()
     {
@@ -293,11 +303,13 @@ public class DrawDebugTools : MonoBehaviour
             Destroy(DrawDebugTools.Instance.m_DebugCamera);
             DrawDebugTools.Instance.m_MainCamera.tag = "MainCamera";
             DrawDebugTools.Instance.m_DebugCameraIsActive = false;
+            if (DrawDebugTools.Instance.m_MainCamera.GetComponent<DDTCamera>())
+                DrawDebugTools.Instance.m_MainCamera.GetComponent<DDTCamera>().SetActive(true);
         }
         else
         {
             // Create debug camera
-            DrawDebugTools.Instance.m_MainCamera = Camera.main.gameObject;
+            //DrawDebugTools.Instance.m_MainCamera = Camera.main.gameObject;
             DrawDebugTools.Instance.m_DebugCamera = new GameObject("DebugCamera");
             DrawDebugTools.Instance.m_DebugCamera.transform.position = Camera.main.transform.position;
             DrawDebugTools.Instance.m_DebugCamera.transform.rotation = Camera.main.transform.rotation;
@@ -309,6 +321,8 @@ public class DrawDebugTools : MonoBehaviour
 
             // Switch cameras tag
             DrawDebugTools.Instance.m_MainCamera.tag = "Untagged";
+            if (DrawDebugTools.Instance.m_MainCamera.GetComponent<DDTCamera>())
+                DrawDebugTools.Instance.m_MainCamera.GetComponent<DDTCamera>().SetActive(false);
             DrawDebugTools.Instance.m_DebugCamera.tag = "MainCamera";
 
             // Set components
@@ -322,7 +336,10 @@ public class DrawDebugTools : MonoBehaviour
                 }
             }
 
-            DrawDebugTools.Instance.m_DebugCamera.AddComponent<DebugCamera>();
+            //DrawDebugTools.Instance.m_DebugCamera.AddComponent<DebugCamera>();
+            DDTCamera DDTCam = DrawDebugTools.Instance.m_DebugCamera.AddComponent<DDTCamera>();
+            DDTCam.SetDrawDebugTools(DrawDebugTools.Instance);
+            DDTCam.SetActive(true);
 
             // Set debug camera new far clip plane
             DrawDebugTools.Instance.m_DebugCamera.GetComponent<Camera>().farClipPlane = 10000.0f;
